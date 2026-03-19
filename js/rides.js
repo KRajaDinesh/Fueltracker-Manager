@@ -119,7 +119,6 @@ function buildFuelWindows(fuelRecords) {
     const start = fuels[i];
     const end = fuels[i + 1] || null;
 
-    // last fuel => open window
     if (!end) {
       windows.push({
         type: "open",
@@ -186,11 +185,9 @@ function mapRideToFuelWindows(ride, windows) {
           startOdo: w.startOdo,
           endOdo: w.endOdo,
           windowDistance: w.windowDistance,
-
           overlapStart: os,
           overlapEnd: oe,
           overlapDistance: od,
-
           share,
           estLitres,
           estCost,
@@ -199,7 +196,6 @@ function mapRideToFuelWindows(ride, windows) {
         });
       }
     } else {
-      // open window: if ride touches beyond start odo => waiting
       if (e > w.startOdo) {
         const os = Math.max(s, w.startOdo);
         const oe = e;
@@ -243,9 +239,9 @@ function mapRideToFuelWindows(ride, windows) {
 
   const dominant = [...overlaps].sort((a, b) => b.overlapDistance - a.overlapDistance)[0];
 
-  const totalOverlapKm = overlaps.reduce((s, x) => s + x.overlapDistance, 0);
-  const totalEstLitres = overlaps.reduce((s, x) => s + x.estLitres, 0);
-  const totalEstCost = overlaps.reduce((s, x) => s + x.estCost, 0);
+  const totalOverlapKm = overlaps.reduce((s0, x) => s0 + x.overlapDistance, 0);
+  const totalEstLitres = overlaps.reduce((s0, x) => s0 + x.estLitres, 0);
+  const totalEstCost = overlaps.reduce((s0, x) => s0 + x.estCost, 0);
 
   const totalEstMileage = (totalEstLitres > 0) ? (totalOverlapKm / totalEstLitres) : null;
   const totalAvgCostPerLitre = (totalEstLitres > 0) ? (totalEstCost / totalEstLitres) : null;
@@ -441,6 +437,17 @@ function renderTable(rides, fuelWindows) {
     return db - da;
   });
 
+  if (!rows.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" class="small" style="text-align:center;padding:20px;">
+          No ride records yet. Start by adding a new ride.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
   for (const r of rows) {
     const d = rideDerived(r);
     const odoLine = `${r.odoStart.toFixed(1)} → ${r.odoEnd.toFixed(1)}`;
@@ -564,6 +571,17 @@ function editRide(r, onSave) {
     const f = new FormData(e.target);
 
     const miscAmt = Math.max(0, num(f.get("miscAmt")));
+    const odoStart = num(f.get("odoStart"));
+    const odoEnd = num(f.get("odoEnd"));
+
+    if (!String(f.get("rideName") || "").trim()) {
+      alert("Ride title is required");
+      return;
+    }
+    if (!(odoEnd > odoStart)) {
+      alert("End Odometer must be greater than Start Odometer");
+      return;
+    }
 
     const updated = {
       ...r,
@@ -573,8 +591,8 @@ function editRide(r, onSave) {
       dateTo: f.get("dateTo"),
       timeStart: f.get("timeStart") || "",
       timeEnd: f.get("timeEnd") || "",
-      odoStart: num(f.get("odoStart")),
-      odoEnd: num(f.get("odoEnd")),
+      odoStart,
+      odoEnd,
       stops: Math.max(0, Math.floor(num(f.get("stops")))),
       waitTimes: JSON.stringify([Math.max(0, Math.floor(num(f.get("waitMins"))))]),
       miscAmt,
@@ -590,7 +608,7 @@ function editRide(r, onSave) {
 }
 
 /* -----------------------------
-   Export (unchanged behavior)
+   Export
 ----------------------------- */
 
 function toCSV(rows) {
@@ -651,7 +669,6 @@ function exportRides(rides) {
 ----------------------------- */
 
 export async function initRides() {
-  // load rides + fuel and build windows
   let rides = (await apiGet("/api/rides/history")).map(normalizeRide);
   let fuel = (await apiGet("/api/fuel")).map(normalizeFuel);
   let fuelWindows = buildFuelWindows(fuel);
@@ -664,18 +681,30 @@ export async function initRides() {
     e.preventDefault();
     const f = new FormData(form);
 
+    const rideName = String(f.get("rideName") || "").trim();
+    const odoStart = num(f.get("odoStart"));
+    const odoEnd = num(f.get("odoEnd"));
     const miscAmt = Math.max(0, num(f.get("miscAmt")));
+
+    if (!rideName) {
+      alert("Ride title is required");
+      return;
+    }
+    if (!(odoEnd > odoStart)) {
+      alert("End Odometer must be greater than Start Odometer");
+      return;
+    }
 
     const rec = {
       id: uid(),
-      rideName: String(f.get("rideName") || "").trim(),
+      rideName,
       routeVia: `${String(f.get("from") || "").trim()} → ${String(f.get("to") || "").trim()}`,
       dateFrom: f.get("dateFrom"),
       dateTo: f.get("dateTo"),
       timeStart: f.get("timeStart") || "",
       timeEnd: f.get("timeEnd") || "",
-      odoStart: num(f.get("odoStart")),
-      odoEnd: num(f.get("odoEnd")),
+      odoStart,
+      odoEnd,
       stops: Math.max(0, Math.floor(num(f.get("stops")))),
       waitTimes: JSON.stringify([Math.max(0, Math.floor(num(f.get("waitMins"))))]),
       miscAmt,
