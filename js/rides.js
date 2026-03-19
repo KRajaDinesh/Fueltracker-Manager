@@ -45,7 +45,7 @@ function normalizeRide(r) {
   const miscArr = safeParseJSON(r.misc, []);
 
   const miscAmt =
-    ("miscAmt" in r)
+    (r.miscAmt !== undefined && r.miscAmt !== null)
       ? num(r.miscAmt)
       : (Array.isArray(miscArr) ? miscArr.reduce((s, it) => s + num(it?.amount), 0) : 0);
 
@@ -563,6 +563,8 @@ function editRide(r, onSave) {
     e.preventDefault();
     const f = new FormData(e.target);
 
+    const miscAmt = Math.max(0, num(f.get("miscAmt")));
+
     const updated = {
       ...r,
       rideName: f.get("rideName"),
@@ -575,7 +577,10 @@ function editRide(r, onSave) {
       odoEnd: num(f.get("odoEnd")),
       stops: Math.max(0, Math.floor(num(f.get("stops")))),
       waitTimes: JSON.stringify([Math.max(0, Math.floor(num(f.get("waitMins"))))]),
-      miscAmt: Math.max(0, num(f.get("miscAmt"))),
+      miscAmt,
+      misc: JSON.stringify(
+        miscAmt > 0 ? [{ category: "Other", item: "Misc", amount: miscAmt }] : []
+      ),
       remarks: f.get("remarks") || ""
     };
 
@@ -659,6 +664,8 @@ export async function initRides() {
     e.preventDefault();
     const f = new FormData(form);
 
+    const miscAmt = Math.max(0, num(f.get("miscAmt")));
+
     const rec = {
       id: uid(),
       rideName: String(f.get("rideName") || "").trim(),
@@ -671,7 +678,10 @@ export async function initRides() {
       odoEnd: num(f.get("odoEnd")),
       stops: Math.max(0, Math.floor(num(f.get("stops")))),
       waitTimes: JSON.stringify([Math.max(0, Math.floor(num(f.get("waitMins"))))]),
-      miscAmt: Math.max(0, num(f.get("miscAmt"))),
+      miscAmt,
+      misc: JSON.stringify(
+        miscAmt > 0 ? [{ category: "Other", item: "Misc", amount: miscAmt }] : []
+      ),
       remarks: f.get("remarks") || ""
     };
 
