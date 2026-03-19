@@ -1,0 +1,120 @@
+:root{
+  --acc1:#6e5cff;
+  --acc2:#00d2ff;
+  --acc3:#8aa6ff;
+}
+
+body[data-theme="analytics"]{
+  background:
+    radial-gradient(1100px 700px at 10% 10%, rgba(110,92,255,.24), transparent 55%),
+    radial-gradient(900px 650px at 85% 25%, rgba(0,210,255,.18), transparent 55%),
+    radial-gradient(900px 650px at 40% 90%, rgba(138,166,255,.16), transparent 55%),
+    linear-gradient(180deg, #050913 0%, #070b15 100%);
+}
+
+.analytics-filter-card,
+.analytics-compare-card{
+  margin-top:16px;
+}
+
+.analytics-section{
+  margin-top:22px;
+}
+
+.section-title-wrap{
+  margin:0 0 12px;
+}
+
+.section-title-wrap h3{
+  margin:0;
+  font-size:18px;
+}
+
+.analytics-mini-kpis{
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap:16px;
+}
+@media (min-width:1100px){
+  .analytics-mini-kpis{
+    grid-template-columns: repeat(4, minmax(0,1fr));
+  }
+}
+
+.v.mini{
+  font-size:22px;
+  margin-top:10px;
+}
+
+.compare-result{
+  margin-top:14px;
+  padding:14px;
+  border-radius:16px;
+  background: rgba(0,0,0,.18);
+  border:1px solid rgba(255,255,255,.10);
+}
+
+.compare-grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap:12px;
+}
+
+.compare-block{
+  border-radius:16px;
+  padding:14px;
+  background: rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.10);
+}
+
+.compare-block h5{
+  margin:0 0 10px;
+  font-size:14px;
+}
+
+.compare-line{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:6px 0;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+.compare-line:last-child{
+  border-bottom:none;
+}
+
+.compare-winner{
+  margin-top:12px;
+  padding:10px 12px;
+  border-radius:14px;
+  background: rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  font-size:13px;
+}
+
+.analytics-filter-row{
+  grid-template-columns: repeat(2, minmax(0,1fr));
+}
+@media (min-width:1100px){
+  .analytics-filter-row{
+    grid-template-columns: repeat(8, minmax(0,1fr));
+  }
+}
+
+.analytics-compare-row{
+  grid-template-columns: repeat(1, minmax(0,1fr));
+}
+@media (min-width:1100px){
+  .analytics-compare-row{
+    grid-template-columns: repeat(3, minmax(0,1fr));
+  }
+}
+
+#analyticsTbody td.small,
+#analyticsTbody .small{
+  color: var(--muted);
+}
+
+canvas{
+  max-height: 320px;
+}

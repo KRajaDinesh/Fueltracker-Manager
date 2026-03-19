@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Analytics • FuelRideManager</title>
+
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/analytics.css"/>
+
+  <script src="libs/chart.min.js"></script>
+</head>
+<body data-theme="analytics">
+<div class="container">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1 id="appBrandName">RajaDinesh</h1>
+        <small>Analytics Tab</small>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="fuel.html">
+        <div class="icon">⛽</div>
+        <div>
+          <div class="label">Fuel</div>
+          <div class="sub">Dashboard</div>
+        </div>
+      </a>
+
+      <a href="rides.html">
+        <div class="icon">🏍️</div>
+        <div>
+          <div class="label">Rides</div>
+          <div class="sub">Dashboard</div>
+        </div>
+      </a>
+
+      <a href="expenses.html">
+        <div class="icon">🧰</div>
+        <div>
+          <div class="label">Expenses</div>
+          <div class="sub">Service • Self</div>
+        </div>
+      </a>
+
+      <a href="tripplanner.html">
+        <div class="icon">🧭</div>
+        <div>
+          <div class="label">Trip Planner</div>
+          <div class="sub">Plan • Setup</div>
+        </div>
+      </a>
+
+      <a href="calculators.html">
+        <div class="icon">🧮</div>
+        <div>
+          <div class="label">Calculators</div>
+          <div class="sub">Quick tools</div>
+        </div>
+      </a>
+
+      <a href="analytics.html" class="active">
+        <div class="icon">📊</div>
+        <div>
+          <div class="label">Analytics</div>
+          <div class="sub">Cards • Charts</div>
+        </div>
+      </a>
+
+      <div class="hr"></div>
+
+      <a href="settings.html">
+        <div class="icon">⚙️</div>
+        <div>
+          <div class="label">Settings</div>
+          <div class="sub">Export • Prefs</div>
+        </div>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <header class="topbar">
+      <div class="title">
+        <h2>Analytics Dashboard</h2>
+        <p>Overall insights • Module-wise trends • Compare • Record explorer</p>
+      </div>
+    </header>
+
+    <!-- Filter Card -->
+    <section class="card analytics-filter-card">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+          <h4 style="margin:0;">Analytics Filters</h4>
+          <div class="actions" style="margin-top:0;">
+            <button id="applyAnalyticsFilters" class="btn primary" type="button">Apply</button>
+            <button id="resetAnalyticsFilters" class="btn ghost" type="button">Reset</button>
+            <button id="toggleAnalyticsRecords" class="btn" type="button">View all</button>
+          </div>
+        </div>
+
+        <div class="row analytics-filter-row" style="margin-top:14px;">
+          <div class="field">
+            <label>From Date</label>
+            <input id="anFromDate" type="date">
+          </div>
+
+          <div class="field">
+            <label>To Date</label>
+            <input id="anToDate" type="date">
+          </div>
+
+          <div class="field">
+            <label>Module</label>
+            <select id="anModule">
+              <option value="all">All Modules</option>
+              <option value="fuel">Fuel</option>
+              <option value="rides">Rides</option>
+              <option value="expenses">Expenses</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Sort By</label>
+            <select id="anSortBy">
+              <option value="latest">Latest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="amountHigh">Amount High to Low</option>
+              <option value="amountLow">Amount Low to High</option>
+              <option value="distanceHigh">Distance High to Low</option>
+              <option value="distanceLow">Distance Low to High</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Min Amount</label>
+            <input id="anMinAmount" type="number" step="0.01" placeholder="0">
+          </div>
+
+          <div class="field">
+            <label>Max Amount</label>
+            <input id="anMaxAmount" type="number" step="0.01" placeholder="5000">
+          </div>
+
+          <div class="field">
+            <label>Min Distance</label>
+            <input id="anMinDistance" type="number" step="0.1" placeholder="0">
+          </div>
+
+          <div class="field">
+            <label>Max Distance</label>
+            <input id="anMaxDistance" type="number" step="0.1" placeholder="1000">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Overall KPI Cards -->
+    <section class="grid kpis">
+      <div class="card grad-fuel"><div class="inner">
+        <div class="k"><h3>Total Fuel Spend</h3><span class="badge">Overall</span></div>
+        <div class="v" id="anTotalFuelSpend">—</div>
+        <div class="small" id="anFuelRange">Range: —</div>
+      </div></div>
+
+      <div class="card grad-money"><div class="inner">
+  <div class="k"><h3>Total Distance Travelled</h3><span class="badge">Overall</span></div>
+  <div class="v" id="anTotalDistance">—</div>
+  <div class="small" id="anDistanceMeta">Based on overall travelled distance</div>
+</div></div>
+
+      <div class="card grad-count"><div class="inner">
+        <div class="k"><h3>Total Expenses</h3><span class="badge">Overall</span></div>
+        <div class="v" id="anTotalExpenses">—</div>
+        <div class="small" id="anExpenseMeta">Service + Self</div>
+      </div></div>
+
+      <div class="card grad-avg"><div class="inner">
+        <div class="k"><h3>Overall Cost / KM</h3><span class="badge">Estimate</span></div>
+        <div class="v" id="anCostPerKm">—</div>
+        <div class="small" id="anLastUpdated">Last update: —</div>
+      </div></div>
+    </section>
+
+    <!-- Overall Charts -->
+    <div class="grid" style="margin-top:16px;">
+      <div class="split">
+        <div class="card"><div class="panel">
+          <h4>Overall Spend Trend</h4>
+          <canvas id="chartOverallSpend"></canvas>
+          <p class="small" style="margin:8px 0 0">Fuel spend + expense trend by month</p>
+        </div></div>
+
+        <div class="card"><div class="panel">
+          <h4>Overall Distance Trend</h4>
+          <canvas id="chartOverallDistance"></canvas>
+          <p class="small" style="margin:8px 0 0">Monthly ride distance and fuel-window distance</p>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- Fuel Analytics -->
+    <section class="analytics-section">
+      <div class="section-title-wrap">
+        <h3>Fuel Analytics</h3>
+        <p class="small">Fuel-related cards and charts</p>
+      </div>
+
+      <section class="grid analytics-mini-kpis">
+        <div class="card"><div class="inner">
+          <div class="k"><h3>Fuel Records</h3><span class="badge">Fuel</span></div>
+          <div class="v mini" id="anFuelRecords">—</div>
+        </div></div>
+
+        <div class="card"><div class="inner">
+          <div class="k"><h3>Total Litres</h3><span class="badge">Fuel</span></div>
+          <div class="v mini" id="anTotalLitres">—</div>
+        </div></div>
+
+        <div class="card"><div class="inner">
+          <div class="k"><h3>Avg Mileage</h3><span class="badge">Fuel</span></div>
+          <div class="v mini" id="anAvgMileage">—</div>
+          <div class="small" id="anBestWorstMileage">Best: — • Worst: —</div>
+        </div></div>
+
+        <div class="card"><div class="inner">
+          <div class="k"><h3>Avg Price / Litre</h3><span class="badge">Fuel</span></div>
+          <div class="v mini" id="anAvgPricePerLitre">—</div>
+        </div></div>
+      </section>
+
+      <div class="split" style="margin-top:16px;">
+        <div class="card"><div class="panel">
+          <h4>Fuel Monthly Snapshot</h4>
+          <canvas id="chartFuelMonthly"></canvas>
+          <p class="small" style="margin:8px 0 0">Bar: Litres • Line: Amount</p>
+        </div></div>
+
+        <div class="card"><div class="panel">
+          <h4>Fuel Cost Per KM Trend</h4>
+          <canvas id="chartFuelCostPerKm"></canvas>
+          <p class="small" style="margin:8px 0 0">Estimated from fuel windows</p>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- Ride Analytics -->
+    <section class="analytics-section">
+      <div class="section-title-wrap">
+        <h3>Ride Analytics</h3>
+        <p class="small">Ride-related cards and charts</p>
+      </div>
+
+      <section class="grid analytics-mini-kpis">
+        <div class="card"><div class="inner">
+          <div class="k"><h3>Ride Records</h3><span class="badge">Rides</span></div>
+          <div class="v mini" id="anRideRecords">—</div>
+        </div></div>
+
+        <div class="card"><div class="inner">
+          <div class="k"><h3>Total Ride Distance</h3><span class="badge">Rides</span></div>
+          <div class="v mini" id="anRideDistance">—</div>
+        </div></div>
+
+        <div class="card"><div class="inner">
+          <div class="k"><h3>Longest Ride</h3><span class="badge">Rides</span></div>
+          <div class="v mini" id="anLongestRide">—</div>
+        </div></div>
+
+        <div class="card"><div class="inner">
+          <div class="k"><h3>Avg Ride Distance</h3><span class="badge">Rides</span></div>
+          <div class="v mini" id="anAvgRideDistance">—</div>
+        </div></div>
+      </section>
+
+      <div class="split" style="margin-top:16px;">
+        <div class="card"><div class="panel">
+          <h4>Ride Distance Trend</h4>
+          <canvas id="chartRideDistance"></canvas>
+          <p class="small" style="margin:8px 0 0">Distance progression over time</p>
+        </div></div>
+
+        <div class="card"><div class="panel">
+          <h4>Ride Count Trend</h4>
+          <canvas id="chartRideCount"></canvas>
+          <p class="small" style="margin:8px 0 0">Count of rides by month</p>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- Expense Analytics -->
+    <section class="analytics-section">
+      <div class="section-title-wrap">
+        <h3>Expense Analytics</h3>
+        <p class="small">Expense-related cards and charts</p>
+      </div>
+
+      <section class="grid analytics-mini-kpis">
+        <div class="card"><div class="inner">
+          <div class="k"><h3>Expense Records</h3><span class="badge">Expenses</span></div>
+          <div class="v mini" id="anExpenseRecords">—</div>
+        </div></div>
+
+        <div class="card"><div class="inner">
+          <div class="k"><h3>Service Spend</h3><span class="badge">Expenses</span></div>
+          <div class="v mini" id="anServiceSpend">—</div>
+        </div></div>
+
+        <div class="card"><div class="inner">
+          <div class="k"><h3>Self Spend</h3><span class="badge">Expenses</span></div>
+          <div class="v mini" id="anSelfSpend">—</div>
+        </div></div>
+
+        <div class="card"><div class="inner">
+          <div class="k"><h3>Highest Expense</h3><span class="badge">Expenses</span></div>
+          <div class="v mini" id="anHighestExpense">—</div>
+        </div></div>
+      </section>
+
+      <div class="split" style="margin-top:16px;">
+        <div class="card"><div class="panel">
+          <h4>Expense Trend</h4>
+          <canvas id="chartExpenseTrend"></canvas>
+          <p class="small" style="margin:8px 0 0">Expense amount by month</p>
+        </div></div>
+
+        <div class="card"><div class="panel">
+          <h4>Expense Split</h4>
+          <canvas id="chartExpenseSplit"></canvas>
+          <p class="small" style="margin:8px 0 0">Service vs self maintenance</p>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- Comparison -->
+    <section class="card analytics-compare-card">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+          <h4 style="margin:0;">Comparison</h4>
+        </div>
+
+        <div class="row analytics-compare-row" style="margin-top:14px;">
+          <div class="field">
+            <label>Compare Type</label>
+            <select id="anCompareType">
+              <option value="fuel">Fuel vs Fuel</option>
+              <option value="rides">Ride vs Ride</option>
+              <option value="expenses">Expense vs Expense</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Record A</label>
+            <select id="anCompareA"></select>
+          </div>
+
+          <div class="field">
+            <label>Record B</label>
+            <select id="anCompareB"></select>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="runCompare" class="btn primary" type="button">Compare</button>
+          <button id="clearCompare" class="btn ghost" type="button">Clear</button>
+        </div>
+
+        <div id="compareResult" class="compare-result">
+          <div class="small">Comparison result will appear here.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Records Explorer -->
+    <div class="card" id="analyticsRecordsCard" style="display:none; margin-top:16px;">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+          <h4 style="margin:0;">Analytics Records Explorer</h4>
+          <div class="small">Filtered and sorted mapped records</div>
+        </div>
+
+        <div class="table-wrap" style="margin-top:12px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Module</th>
+                <th>Title / Type</th>
+                <th>Amount</th>
+                <th>Distance</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody id="analyticsTbody">
+              <tr>
+                <td colspan="6" class="small">No records loaded yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal">
+        <header>
+          <h3 id="modalTitle">Details</h3>
+          <button class="iconbtn" id="closeModal" title="Close" type="button">✖</button>
+        </header>
+        <div class="content" id="modalBody"></div>
+        <footer>
+          <button class="btn ghost" id="closeModal2" type="button">Close</button>
+        </footer>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script type="module">
+  import { init } from "./js/main.js";
+  import { initAnalytics } from "./js/analytics.js";
+
+  init();
+
+  const btn = document.getElementById("toggleAnalyticsRecords");
+  const card = document.getElementById("analyticsRecordsCard");
+
+  btn?.addEventListener("click", () => {
+    const isOpen = card.style.display === "block";
+    card.style.display = isOpen ? "none" : "block";
+    btn.textContent = isOpen ? "View all" : "Hide";
+    if (!isOpen) card.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  document.getElementById("closeModal2")?.addEventListener(
+    "click",
+    () => document.getElementById("modalBackdrop").classList.remove("show")
+  );
+
+  await initAnalytics();
+</script>
+
+</body>
+</html>
