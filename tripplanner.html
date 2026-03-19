@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Trip Planner • FuelRideManager</title>
+
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/tripplanner.css"/>
+</head>
+
+<body data-theme="trip">
+<div class="container">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1 id="appBrandName">RajaDinesh</h1>
+        <small>Trip Planner Module</small>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="fuel.html"><div class="icon">⛽</div><div class="label">Fuel</div></a>
+      <a href="rides.html"><div class="icon">🏍️</div><div class="label">Rides</div></a>
+      <a href="expenses.html"><div class="icon">🧰</div><div class="label">Maintenance</div></a>
+      <a href="tripplanner.html" class="active"><div class="icon">🧭</div><div class="label">Trip Planner</div></a>
+      <a href="calculators.html"><div class="icon">🧮</div><div class="label">Calculators</div></a>
+      <div class="hr"></div>
+      <a href="settings.html"><div class="icon">⚙️</div><div class="label">Settings</div></a>
+    </nav>
+  </aside>
+
+  <main class="main">
+
+    <header class="topbar">
+      <div class="title">
+        <h2>Trip Setup</h2>
+        <p>Plan and manage your journeys</p>
+      </div>
+      <div class="avatar"></div>
+    </header>
+
+    <section class="stack-section">
+      <div class="card">
+        <div class="panel">
+
+          <!-- Header with View All -->
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <h4 style="margin:0;">Trip Details</h4>
+            <button id="tpToggleTrips" class="btn">View all</button>
+          </div>
+
+          <!-- Form -->
+          <form id="tpTripForm" style="margin-top:14px;">
+            <div class="row">
+              <div class="field"><label>Trip Name</label><input id="tpTripName"></div>
+              <div class="field"><label>Date</label><input id="tpTripDate" type="date"></div>
+              <div class="field"><label>From</label><input id="tpTripFrom"></div>
+              <div class="field"><label>To</label><input id="tpTripTo"></div>
+              <div class="field"><label>Start Time</label><input id="tpTripStart" type="time" value="04:00"></div>
+              <div class="field"><label>Duration (Hours)</label><input id="tpTripHours" type="number" step="0.25"></div>
+              <div class="field"><label>Distance (Km)</label><input id="tpTripKm" type="number"></div>
+              <div class="field" style="grid-column:span 2;"><label>Notes</label><input id="tpTripNotes"></div>
+            </div>
+
+            <div class="actions">
+              <button class="btn primary" type="submit">Save</button>
+              <button class="btn" type="button" id="tpTripClearBtn">Clear</button>
+            </div>
+          </form>
+
+          <!-- Records Table (Hidden by default, BELOW Save) -->
+          <div id="tpTripsWrap" style="display:none; margin-top:20px;">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Name</th>
+                    <th>Route</th>
+                    <th>Km</th>
+                    <th>Hours</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="tpTripTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Modal -->
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal">
+        <header>
+          <h3 id="modalTitle">Trip Details</h3>
+          <button class="iconbtn" id="closeModal" type="button">✖</button>
+        </header>
+        <div class="content" id="modalBody"></div>
+        <footer>
+          <button class="btn ghost" id="closeModal2" type="button">Close</button>
+        </footer>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script type="module">
+  import { init } from "./js/main.js";
+  import "./js/tripplanner.js";
+  init();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>FuelRideManager</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/fuel.css">
+  <link rel="stylesheet" href="css/rides.css">
+
+</head>
+<body data-theme="fuel">
+  <div class="container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>Raja Dinesh</h1>
+          <small>Localhost • Glass UI</small>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a href="fuel.html">
+          <div class="icon">⛽</div>
+          <div>
+            <div class="label">Fuel</div>
+            <div class="sub">Records • KPIs • Analytics</div>
+          </div>
+        </a>
+
+        <a href="rides.html">
+          <div class="icon">🏍️</div>
+          <div>
+            <div class="label">Rides</div>
+            <div class="sub">History • Planned • Expenses</div>
+          </div>
+        </a>
+
+        <a href="expenses.html">
+          <div class="icon">🧰</div>
+          <div>
+            <div class="label">Expenses</div>
+            <div class="sub">Service • Self maintenance</div>
+          </div>
+        </a>
+         <!-- NEW: Trip Planner -->
+        <a href="tripplanner.html">
+          <div class="icon">🧭</div>
+          <div>
+             <div class="label">Trip Planner</div>
+            <div class="sub">Breaks • Planning • ETA</div>
+          </div>
+        </a>
+
+        <a href="calculators.html">
+          <div class="icon">🧮</div>
+          <div>
+            <div class="label">Calculators</div>
+            <div class="sub">Quick estimates</div>
+          </div>
+        </a>
+
+        <div class="hr"></div>
+
+        <a href="settings.html">
+          <div class="icon">⚙️</div>
+          <div>
+            <div class="label">Settings</div>
+            <div class="sub">Prefs • Global export</div>
+          </div>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+
+      <header class="topbar">
+        <div class="title">
+          <h2 id="pageTitle">Home</h2>
+          <p id="pageSubtitle">Choose Fuel or Rides to start.</p>
+        </div>
+
+        <div class="controls">
+          <div class="toggle" title="Switch tabs">
+            <button data-toggle="fuel">Fuel</button>
+            <button data-toggle="rides">Rides</button>
+          </div>
+          <div class="avatar" title="Profile"></div>
+        </div>
+      </header>
+
+      <div class="card">
+        <div class="inner">
+          <h3 style="margin:0 0 8px">Welcome</h3>
+          <p class="small" style="margin:0 0 14px">
+            Open <b>Fuel</b> or <b>Rides</b> from the sidebar. This runs fully on localhost using LocalStorage.
+          </p>
+
+          <div class="actions" style="justify-content:flex-start">
+            <a class="btn primary" href="fuel.html">Go to Fuel</a>
+            <a class="btn" href="rides.html">Go to Rides</a>
+          </div>
+
+          <p class="small" style="margin-top:12px">
+            Tip: Use Live Server (VS Code) or <code>python -m http.server 8000</code>.
+          </p>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script type="module">
+    import { init } from './js/main.js';
+    init();
+  </script>
+</body>
+</html>

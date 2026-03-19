@@ -1,0 +1,14 @@
+:root{
+  --acc1:#ff8a00;
+  --acc2:#00d2ff;
+  --acc3:#ffd36e;
+}
+body[data-theme="fuel"] .logo{
+  background: linear-gradient(135deg, var(--acc1), var(--acc2));
+}
+/* Fuel: View All highlight */
+.pulse-focus{
+  outline: 2px solid rgba(255,255,255,.22);
+  box-shadow: 0 0 0 6px rgba(255,255,255,.06);
+  transition: box-shadow .2s ease, outline .2s ease;
+}

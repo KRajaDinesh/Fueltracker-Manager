@@ -1,0 +1,49 @@
+:root{
+  --acc1:#7c3aed;
+  --acc2:#22d3ee;
+  --acc3:#fbbf24;
+}
+
+/* Make trip theme logo gradient */
+body[data-theme="trip"] .logo{
+  background: linear-gradient(135deg,var(--acc1),var(--acc2));
+}
+
+/* Hub grid */
+.tp-grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap:16px;
+  margin-top:16px;
+}
+
+/* Tile buttons styled like cards */
+button.card.tp-tile{
+  width:100%;
+  padding:0;
+  text-align:left;
+  border-radius:20px;
+  cursor:pointer;
+  color: var(--text);     /* Force white text */
+}
+
+.tp-tile:hover{
+  border-color: rgba(255,255,255,.18);
+  background: rgba(255,255,255,.08);
+}
+
+.tp-tile-title{
+  font-weight:900;
+  font-size:18px;
+  margin-top:6px;
+}
+
+.hidden{
+  display:none !important;
+}
+
+@media (max-width:900px){
+  .tp-grid{
+    grid-template-columns:1fr;
+  }
+}

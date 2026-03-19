@@ -1,0 +1,17 @@
+:root{
+  --acc1:#6e5cff;
+  --acc2:#00d2ff;
+  --acc3:#8aa6ff;
+}
+
+body[data-theme="rides"]{
+  background:
+    radial-gradient(1100px 700px at 10% 10%, rgba(120,100,255,.25), transparent 55%),
+    radial-gradient(900px 650px at 85% 25%, rgba(0,210,255,.18), transparent 55%),
+    radial-gradient(900px 650px at 40% 90%, rgba(70,160,255,.18), transparent 55%),
+    linear-gradient(180deg, #050913 0%, #070b15 100%);
+}
+
+body[data-theme="rides"] .logo{
+  background: linear-gradient(135deg, var(--acc1), var(--acc2));
+}

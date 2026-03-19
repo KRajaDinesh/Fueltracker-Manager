@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Rides • FuelRideManager</title>
+
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/rides.css"/>
+
+  <!-- Charts + Export -->
+  <script src="libs/chart.min.js"></script>
+  <script src="libs/xlsx.full.min.js"></script>
+</head>
+
+<body data-theme="rides">
+  <div class="container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1 id="appBrandName">FuelRideManager</h1>
+          <small>Rides Module</small>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a href="fuel.html">
+          <div class="icon">⛽</div>
+          <div>
+            <div class="label">Fuel</div>
+            <div class="sub">Dashboard</div>
+          </div>
+        </a>
+
+        <a href="rides.html" class="active">
+          <div class="icon">🏍️</div>
+          <div>
+            <div class="label">Rides</div>
+            <div class="sub">Dashboard</div>
+          </div>
+        </a>
+
+        <a href="expenses.html">
+          <div class="icon">🧰</div>
+          <div>
+            <div class="label">Expenses</div>
+            <div class="sub">Service • Self</div>
+          </div>
+        </a>
+        <!-- NEW: Trip Planner -->
+  <a href="tripplanner.html">
+    <div class="icon">🧭</div>
+    <div class="label">Trip Planner</div>
+  </a>
+
+        <a href="calculators.html">
+          <div class="icon">🧮</div>
+          <div>
+            <div class="label">Calculators</div>
+            <div class="sub">Quick tools</div>
+          </div>
+        </a>
+
+        <div class="hr"></div>
+
+        <a href="settings.html">
+          <div class="icon">⚙️</div>
+          <div>
+            <div class="label">Settings</div>
+            <div class="sub">Export • Prefs</div>
+          </div>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+
+      <header class="topbar">
+        <div class="title">
+          <h2>Rides Dashboard</h2>
+          <p>KPIs • Add rides • Ride records table</p>
+        </div>
+        <div class="controls">
+          <div class="avatar" title="Profile"></div>
+        </div>
+      </header>
+
+      <!-- KPI CARDS (4) -->
+      <section class="grid kpis">
+        <div class="card grad-money"><div class="inner">
+          <div class="k"><h3>Total Rides</h3><span class="badge">Mandatory</span></div>
+          <div class="v" id="rkpiCount">—</div>
+        </div></div>
+
+        <div class="card grad-count"><div class="inner">
+          <div class="k"><h3>Total Distance</h3><span class="badge">Mandatory</span></div>
+          <div class="v" id="rkpiDistance">—</div>
+        </div></div>
+
+        <div class="card grad-avg"><div class="inner">
+          <div class="k"><h3>Total Travelling Time</h3><span class="badge">Mandatory</span></div>
+          <div class="v" id="rkpiTravelTime">—</div>
+        </div></div>
+
+       <div class="card grad-fuel"><div class="inner">
+  <div class="k"><h3>Longest Ride</h3><span class="badge">Mandatory</span></div>
+  <div class="v" id="rkpiLongest">—</div>
+  <div class="small" id="rkpiLongestMeta" style="margin-top:8px">—</div>
+</div></div>
+      </section>
+
+      <!-- Add Ride + Ride Records (Fuel-like structure) -->
+      <div class="grid" style="margin-top:16px">
+
+        <!-- Add New Ride -->
+        <div class="card">
+          <div class="panel">
+            <h4>Add New Ride Record</h4>
+
+            <form id="rideFormInline">
+              <div class="row">
+                <div class="field"><label>Start Date</label><input name="dateFrom" type="date" required></div>
+                <div class="field"><label>End Date</label><input name="dateTo" type="date" required></div>
+                <div class="field"><label>Ride Title</label><input name="rideName" placeholder="Office Ride / Trip" required></div>
+
+                <div class="field"><label>From</label><input name="from" placeholder="Start location" required></div>
+                <div class="field"><label>To</label><input name="to" placeholder="End location" required></div>
+
+                <div class="field"><label>Start Time</label><input name="timeStart" type="time"></div>
+                <div class="field"><label>End Time</label><input name="timeEnd" type="time"></div>
+
+                <div class="field"><label>Start ODO</label><input name="odoStart" type="number" step="0.1" required></div>
+                <div class="field"><label>End ODO</label><input name="odoEnd" type="number" step="0.1" required></div>
+
+                <div class="field"><label>Stops</label><input name="stops" type="number" min="0" value="0"></div>
+                <div class="field"><label>Wait (mins)</label><input name="waitMins" type="number" min="0" value="0"></div>
+
+                <div class="field"><label>Misc (₹)</label><input name="miscAmt" type="number" min="0" value="0"></div>
+                <div class="field"><label>Remarks</label><input name="remarks" placeholder="optional"></div>
+              </div>
+
+              <div class="actions">
+                <button type="reset" class="btn ghost">Clear</button>
+                <button type="submit" class="btn primary">Save Ride</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Ride Table (Fuel Records reference) -->
+        <div class="card">
+          <div class="panel">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+              <h4 style="margin:0">Ride Records</h4>
+              <button class="btn" id="exportRides">Export</button>
+            </div>
+
+            <p class="small" style="margin:8px 0 12px">
+              Actions: View / Edit / Delete. Export XLSX (if XLSX loaded) else CSV.
+            </p>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Ride</th>
+                    <th>Date</th>
+                    <th>Route</th>
+                    <th>ODO</th>
+                    <th>Distance</th>
+                    <th>Time</th>
+                    <th>Stops</th>
+                    <th>Misc</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="rideTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal (same structure as Fuel so View/Edit works) -->
+      <div class="modal-backdrop" id="modalBackdrop">
+        <div class="modal">
+          <header>
+            <h3 id="modalTitle">Details</h3>
+            <button class="iconbtn" id="closeModal" title="Close">✖</button>
+          </header>
+          <div class="content" id="modalBody"></div>
+          <footer>
+            <button class="btn ghost" id="closeModal2">Close</button>
+          </footer>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script type="module">
+    import { init } from './js/main.js';
+    import { initRides } from './js/rides.js';
+
+    init();
+
+    document.getElementById('closeModal2')?.addEventListener(
+      'click',
+      () => document.getElementById('modalBackdrop').classList.remove('show')
+    );
+
+    await initRides();
+  </script>
+</body>
+</html>

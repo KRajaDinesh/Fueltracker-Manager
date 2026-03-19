@@ -1,0 +1,142 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Calculators • FuelRideManager</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/fuel.css">
+  <link rel="stylesheet" href="css/rides.css">
+
+</head>
+
+<body data-theme="fuel">
+
+<div class="container">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1 id="appBrandName">FuelRideManager</h1>
+        <small>Calculators</small>
+      </div>
+    </div>
+
+    <nav class="nav">
+  <a href="fuel.html">
+    <div class="icon">⛽</div>
+    <div class="label">Fuel</div>
+  </a>
+
+  <a href="rides.html">
+    <div class="icon">🏍️</div>
+    <div class="label">Rides</div>
+  </a>
+
+  <a href="expenses.html">
+    <div class="icon">🧰</div>
+    <div class="label">Expenses</div>
+  </a>
+
+  <!-- NEW: Trip Planner -->
+  <a href="tripplanner.html">
+    <div class="icon">🧭</div>
+    <div class="label">Trip Planner</div>
+  </a>
+
+  <a href="calculators.html" class="active">
+    <div class="icon">🧮</div>
+    <div class="label">Calculators</div>
+  </a>
+
+  <div class="hr"></div>
+
+  <a href="settings.html">
+    <div class="icon">⚙️</div>
+    <div class="label">Settings</div>
+  </a>
+</nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <header class="topbar">
+      <div class="title">
+        <h2>Calculators</h2>
+        <p>Quick tools for trip and fuel estimation</p>
+      </div>
+      <div class="avatar"></div>
+    </header>
+
+    <div class="grid">
+
+      <!-- Fuel Cost Calculator -->
+      <div class="card">
+        <div class="panel">
+          <h4>Fuel Cost Calculator</h4>
+          <div class="row">
+            <div class="field"><label>Distance (km)</label><input id="cDist" type="number"></div>
+            <div class="field"><label>Mileage (km/l)</label><input id="cMil" type="number"></div>
+            <div class="field"><label>Fuel Price</label><input id="cPrice" type="number"></div>
+            <div class="field"><label>Total Cost</label><input id="cFuelOut" readonly></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mileage Calculator -->
+      <div class="card">
+        <div class="panel">
+          <h4>Mileage Calculator</h4>
+          <div class="row">
+            <div class="field"><label>Odo Start</label><input id="mStart" type="number"></div>
+            <div class="field"><label>Odo End</label><input id="mEnd" type="number"></div>
+            <div class="field"><label>Fuel Used (L)</label><input id="mFuel" type="number"></div>
+            <div class="field"><label>Mileage</label><input id="mOut" readonly></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trip Cost -->
+      <div class="card">
+        <div class="panel">
+          <h4>Trip Cost Calculator</h4>
+          <div class="row">
+            <div class="field"><label>Distance</label><input id="tDist" type="number"></div>
+            <div class="field"><label>Mileage</label><input id="tMil" type="number"></div>
+            <div class="field"><label>Fuel Price</label><input id="tPrice" type="number"></div>
+            <div class="field"><label>Misc Expense</label><input id="tMisc" type="number"></div>
+            <div class="field"><label>Total Trip Cost</label><input id="tOut" readonly></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Misc Calculator -->
+      <div class="card">
+        <div class="panel">
+          <h4>Misc Expense Calculator</h4>
+          <div class="row">
+            <div class="field"><label>Price</label><input id="xPrice" type="number"></div>
+            <div class="field"><label>Quantity</label><input id="xQty" type="number"></div>
+            <div class="field"><label>Total</label><input id="xOut" readonly></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<script type="module">
+  import { init } from './js/main.js';
+  import { initCalculators } from './js/calculators.js';
+  init();
+  initCalculators();
+</script>
+
+</body>
+</html>

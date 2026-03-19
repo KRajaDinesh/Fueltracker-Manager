@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Settings • FuelRideManager</title>
+
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/fuel.css">
+  <link rel="stylesheet" href="css/rides.css">
+  <link rel="stylesheet" href="css/settings.css"/>
+  
+  <script src="libs/chart.min.js"></script>
+<script src="libs/xlsx.full.min.js"></script>
+
+</head>
+
+<body data-theme="fuel">
+
+<div class="container">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1 id="appBrandName">FuelRideManager</h1>
+        <small>Settings</small>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="fuel.html"><div class="icon">⛽</div><div class="label">Fuel</div></a>
+      <a href="rides.html"><div class="icon">🏍️</div><div class="label">Rides</div></a>
+      <a href="expenses.html"><div class="icon">🧰</div><div class="label">Expenses</div></a>
+      <a href="tripplanner.html"><div class="icon">🧭</div><div class="label">Trip Planner</div></a>
+      <a href="calculators.html"><div class="icon">🧮</div><div class="label">Calculators</div></a>
+      <div class="hr"></div>
+      <a href="settings.html" class="active"><div class="icon">⚙️</div><div class="label">Settings</div></a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <header class="topbar">
+      <div class="title">
+        <h2>Settings</h2>
+        <p>Preferences • Global Export • Theme</p>
+      </div>
+      <div class="avatar"></div>
+    </header>
+
+    <div class="grid">
+
+      <!-- Preferences -->
+      <div class="card">
+        <div class="panel">
+          <h4>General Preferences</h4>
+          <div class="row">
+            <div class="field">
+              <label>Units</label>
+              <select id="sUnits">
+                <option value="km">Kilometers</option>
+                <option value="mi">Miles</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Currency</label>
+              <select id="sCurrency">
+                <option value="₹">₹ INR</option>
+                <option value="$">$ USD</option>
+                <option value="€">€ EUR</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Theme</label>
+              <select id="sTheme">
+                <option value="fuel">Fuel (Orange/Teal)</option>
+                <option value="rides">Rides (Blue/Purple)</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Date Format</label>
+              <select id="sDate">
+                <option value="local">Local</option>
+                <option value="iso">YYYY-MM-DD</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="saveSettings" class="btn primary">Save Settings</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Global Export -->
+      <div class="card">
+        <div class="panel">
+          <h4>Global Export</h4>
+          <p class="small">Export all Fuel + Rides + Expenses data together.</p>
+
+          <div class="actions">
+            <button id="globalExport" class="btn">Export All Data</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<script type="module">
+  import { init } from './js/main.js';
+  import { initSettings } from './js/settings.js';
+  init();
+  initSettings();
+</script>
+
+</body>
+</html>

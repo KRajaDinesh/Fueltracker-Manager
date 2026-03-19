@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Fuel • FuelRideManager</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/fuel.css">
+
+  <script src="libs/chart.min.js"></script>
+  <script src="libs/xlsx.full.min.js"></script>
+</head>
+<body data-theme="fuel">
+<div class="container">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1 id="appBrandName">RajaDinesh</h1>
+        <small>Fuel Tab</small>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="fuel.html" class="active">
+        <div class="icon">⛽</div>
+        <div>
+          <div class="label">Fuel</div>
+          <div class="sub">Dashboard</div>
+        </div>
+      </a>
+
+      <a href="rides.html">
+        <div class="icon">🏍️</div>
+        <div>
+          <div class="label">Rides</div>
+          <div class="sub">Dashboard</div>
+        </div>
+      </a>
+
+      <a href="expenses.html">
+        <div class="icon">🧰</div>
+        <div>
+          <div class="label">Expenses</div>
+          <div class="sub">Service • Self</div>
+        </div>
+      </a>
+
+      <a href="tripplanner.html">
+        <div class="icon">🧭</div>
+        <div>
+          <div class="label">Trip Planner</div>
+          <div class="sub">Plan • Setup</div>
+        </div>
+      </a>
+
+      <a href="calculators.html">
+        <div class="icon">🧮</div>
+        <div>
+          <div class="label">Calculators</div>
+          <div class="sub">Quick tools</div>
+        </div>
+      </a>
+
+      <div class="hr"></div>
+
+      <a href="settings.html">
+        <div class="icon">⚙️</div>
+        <div>
+          <div class="label">Settings</div>
+          <div class="sub">Export • Prefs</div>
+        </div>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <header class="topbar">
+      <div class="title">
+        <h2>Fuel Dashboard</h2>
+        <p>KPIs • Add records • Table • Monthly snapshot</p>
+      </div>
+    </header>
+
+    <!-- KPI Cards -->
+    <section class="grid kpis">
+      <div class="card grad-fuel"><div class="inner">
+        <div class="k"><h3>Total Refueled (Lifetime)</h3><span class="badge">Mandatory</span></div>
+        <div class="v" id="kpiLitres">—</div>
+      </div></div>
+
+      <div class="card grad-money"><div class="inner">
+        <div class="k"><h3>Total Amount Spent (Lifetime)</h3><span class="badge">Mandatory</span></div>
+        <div class="v" id="kpiSpent">—</div>
+      </div></div>
+
+      <div class="card grad-count"><div class="inner">
+        <div class="k"><h3>Number of Refuels (Lifetime)</h3><span class="badge">Mandatory</span></div>
+        <div class="v" id="kpiCount">—</div>
+      </div></div>
+
+      <div class="card grad-avg"><div class="inner">
+        <div class="k"><h3>Average Mileage (Lifetime)</h3><span class="badge">Mandatory</span></div>
+        <div class="v" id="kpiAvg">—</div>
+        <div class="small" id="kpiBest" style="margin-top:8px">Best: —</div>
+        <div class="small" id="kpiWorst">Worst: —</div>
+        <div class="small" id="kpiCpk" style="margin-top:6px">—</div>
+      </div></div>
+    </section>
+
+    <div class="grid" style="margin-top:16px">
+
+      <!-- Add Fuel Record -->
+      <div class="card">
+        <div class="panel">
+
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <h4 style="margin:0;">Add New Fuel Record</h4>
+            <button id="toggleFuelRecords" class="btn" type="button">View all</button>
+          </div>
+
+          <form id="fuelForm" style="margin-top:14px;">
+            <div class="row">
+              <div class="field"><label>Date</label><input name="date" type="date" required></div>
+              <div class="field"><label>Location</label><input name="location" placeholder="City / Area"></div>
+              <div class="field"><label>Fuel Station</label><input name="station" placeholder="Station name"></div>
+
+              <div class="field"><label>Price / Litre</label><input name="pricePerLitre" type="number" step="0.01" required></div>
+              <div class="field"><label>Litres</label><input name="litres" type="number" step="0.01" placeholder="Auto from Amount/Price"></div>
+              <div class="field"><label>Amount Paid</label><input name="amountPaid" type="number" step="0.01" placeholder="Auto if empty"></div>
+
+              <div class="field">
+                <label>Payment</label>
+                <select name="payMethod">
+                  <option>Cash</option>
+                  <option>UPI</option>
+                </select>
+              </div>
+
+              <div class="field"><label>Odometer</label><input name="odometer" type="number" step="0.1" required></div>
+              <div class="field"><label>Trip A</label><input name="tripA" placeholder="optional"></div>
+              <div class="field"><label>Trip B</label><input name="tripB" placeholder="optional"></div>
+              <div class="field"><label>Trip F</label><input name="tripF" placeholder="optional"></div>
+              <div class="field"><label>Remarks</label><input name="remarks" placeholder="optional"></div>
+            </div>
+
+            <div class="actions">
+              <button type="reset" class="btn ghost">Clear</button>
+              <button type="submit" class="btn primary">Save Record</button>
+            </div>
+          </form>
+
+        </div>
+      </div>
+
+      <!-- Fuel Records (Hidden by default) -->
+      <div class="card" id="fuelRecordsCard" style="display:none;">
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <h4 style="margin:0;">Fuel Records</h4>
+            <button class="btn" id="exportFuel" type="button">Export</button>
+          </div>
+
+          <p class="small" style="margin:8px 0 12px">
+            Actions: View / Edit / Delete. Export XLSX (if XLSX loaded) else CSV.
+          </p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th><th>Location</th><th>Station</th><th>Price/L</th>
+                  <th>Amount</th><th>Litres</th><th>Odometer</th><th>Pay</th>
+                  <th>Remarks</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="fuelTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts (RESTORED) -->
+      <div class="split">
+        <div class="card"><div class="panel">
+          <h4>Monthly Snapshot</h4>
+          <canvas id="fuelChart"></canvas>
+          <p class="small" style="margin:8px 0 0">Bar: Litres • Line: Amount</p>
+        </div></div>
+
+        <div class="card"><div class="panel">
+          <h4>Cost Per KM Trend (Estimated)</h4>
+          <canvas id="costChart"></canvas>
+          <p class="small" style="margin:8px 0 0">
+            Estimate uses Amount Paid ÷ Distance (computed from odometer windows).
+          </p>
+        </div></div>
+      </div>
+
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal">
+        <header>
+          <h3 id="modalTitle">Details</h3>
+          <button class="iconbtn" id="closeModal" title="Close" type="button">✖</button>
+        </header>
+        <div class="content" id="modalBody"></div>
+        <footer>
+          <button class="btn ghost" id="closeModal2" type="button">Close</button>
+        </footer>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script type="module">
+  import { init } from './js/main.js';
+  import { initFuel } from './js/fuel.js';
+
+  init();
+
+  // Toggle records card (hidden by default)
+  const btn = document.getElementById("toggleFuelRecords");
+  const card = document.getElementById("fuelRecordsCard");
+
+  btn?.addEventListener("click", () => {
+    const isOpen = card.style.display === "block";
+    card.style.display = isOpen ? "none" : "block";
+    btn.textContent = isOpen ? "View all" : "Hide";
+    if (!isOpen) card.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  // close modal extra button
+  document.getElementById('closeModal2')?.addEventListener(
+    'click',
+    () => document.getElementById('modalBackdrop').classList.remove('show')
+  );
+
+  await initFuel();
+</script>
+
+</body>
+</html>

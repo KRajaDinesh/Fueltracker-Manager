@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Maintenance • FuelRideManager</title>
+
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/fuel.css">
+  <link rel="stylesheet" href="css/rides.css">
+
+  <script src="libs/chart.min.js"></script>
+  <script src="libs/xlsx.full.min.js"></script>
+</head>
+
+<body data-theme="fuel">
+<div class="container">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1 id="appBrandName">RajaDinesh</h1>
+        <small>Maintenance Module</small>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="fuel.html">
+        <div class="icon">⛽</div>
+        <div class="label">Fuel</div>
+      </a>
+
+      <a href="rides.html">
+        <div class="icon">🏍️</div>
+        <div class="label">Rides</div>
+      </a>
+
+      <a href="expenses.html" class="active">
+        <div class="icon">🧰</div>
+        <div class="label">Maintenance</div>
+      </a>
+       <!-- NEW: Trip Planner -->
+  <a href="tripplanner.html">
+    <div class="icon">🧭</div>
+    <div class="label">Trip Planner</div>
+  </a>
+      <a href="calculators.html">
+        <div class="icon">🧮</div>
+        <div class="label">Calculators</div>
+      </a>
+
+      <div class="hr"></div>
+
+      <a href="settings.html">
+        <div class="icon">⚙️</div>
+        <div class="label">Settings</div>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <header class="topbar">
+      <div class="title">
+        <h2>Maintenance</h2>
+        <p>Service Maintenance + Self Maintenance</p>
+      </div>
+      <div class="avatar"></div>
+    </header>
+
+    <!-- SERVICE MAINTENANCE -->
+    <section id="serviceSection" class="stack-section">
+      <div class="card">
+        <div class="panel">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <h4 style="margin:0;">Service Maintenance</h4>
+            <button id="toggleSvcRecords" class="btn" type="button">View all</button>
+          </div>
+
+          <!-- Add New Service Form (always visible) -->
+          <form id="serviceForm" style="margin-top:14px;">
+            <div class="row">
+              <div class="field"><label>Date</label><input name="date" type="date" required></div>
+              <div class="field"><label>Location</label><input name="location" required></div>
+              <div class="field"><label>Service No</label><input name="serviceNo"></div>
+              <div class="field">
+                <label>Type</label>
+                <select name="type">
+                  <option>Free</option>
+                  <option>Paid</option>
+                </select>
+              </div>
+              <div class="field"><label>Amount</label><input name="amount" type="number" step="0.01"></div>
+              <div class="field"><label>Notes</label><input name="notes"></div>
+            </div>
+
+            <div class="actions">
+              <button class="btn primary" type="submit">Save</button>
+            </div>
+          </form>
+
+          <!-- 2 cards below Service form -->
+          <div id="svcCards" style="margin-top:14px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px;">
+            <div class="card">
+              <div class="panel">
+                <div class="small">Total Service Cost (Lifetime)</div>
+                <div id="svcTotalAmount" style="font-size:22px; margin-top:6px;">—</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="panel">
+                <div class="small">Last Service</div>
+                <div id="svcLastService" style="font-size:18px; margin-top:6px;">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Records (hidden until View all) -->
+          <div id="svcRecordsWrap" style="display:none; margin-top:16px;">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Location</th>
+                    <th>Service</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="svcTbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- SELF MAINTENANCE -->
+    <section id="selfSection" class="stack-section">
+      <div class="card">
+        <div class="panel">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <h4 style="margin:0;">Self Maintenance</h4>
+            <button id="toggleSelfRecords" class="btn" type="button">View all</button>
+          </div>
+
+          <!-- Add New Self Form (always visible) -->
+         <form id="selfForm" style="margin-top:14px;">
+  <div class="row">
+
+    <!-- Date -->
+    <div class="field">
+      <label>Date</label>
+      <input name="date" type="date" required>
+    </div>
+              <!-- Item + suggestions -->
+              <div class="field">
+                <label>Item</label>
+                <input name="item"
+                       id="selfItemInput"
+                       list="selfItemList"
+                       required
+                       placeholder="Start typing…">
+                <datalist id="selfItemList"></datalist>
+              </div>
+
+              <!-- Company -->
+              <div class="field">
+                <label>Company</label>
+                <input name="company" id="selfCompanyInput" placeholder="e.g., Motul / 3M / RE">
+              </div>
+
+              <div class="field"><label>Qty</label><input name="qty" type="number" value="1"></div>
+              <div class="field"><label>Amount</label><input name="amount" type="number" step="0.01" required></div>
+              <div class="field"><label>Notes</label><input name="notes"></div>
+            </div>
+
+            <div class="actions">
+              <button class="btn primary" type="submit">Save</button>
+            </div>
+          </form>
+
+          <!-- Pie chart + 2 cards -->
+          <div style="margin-top:14px; display:grid; grid-template-columns: 1.5fr 1fr; gap:12px; align-items:start;">
+            <div class="card">
+              <div class="panel">
+                <div class="small">Self Maintenance Breakdown</div>
+                <div class="pie-wrapper" style="margin-top:12px;">
+                  <canvas id="selfPie"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:grid; gap:12px;">
+              <div class="card">
+                <div class="panel">
+                  <div class="small">Total Self Maintenance (Lifetime)</div>
+                  <div id="selfTotalAmount" style="font-size:20px; margin-top:6px;">—</div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="panel">
+                  <div class="small">Top Expense Item</div>
+                  <div id="selfTopItem" style="font-size:20px; margin-top:6px;">—</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Records (hidden until View all) -->
+          <div id="selfRecordsWrap" style="display:none; margin-top:16px;">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Item</th>
+                    <th>Qty</th>
+                    <th>Amount</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="selfTbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Modal (same as fuel.html) -->
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal">
+        <header>
+          <h3 id="modalTitle">Details</h3>
+          <button class="iconbtn" id="closeModal" title="Close" type="button">✖</button>
+        </header>
+        <div class="content" id="modalBody"></div>
+        <footer>
+          <button class="btn ghost" id="closeModal2" type="button">Close</button>
+        </footer>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script type="module">
+  import { init } from './js/main.js';
+  import { initExpenses } from './js/expenses.js';
+
+  init();
+
+  // close modal extra button (same as fuel.html)
+  document.getElementById('closeModal2')?.addEventListener(
+    'click',
+    () => document.getElementById('modalBackdrop').classList.remove('show')
+  );
+
+  initExpenses();
+</script>
+
+</body>
+</html>
