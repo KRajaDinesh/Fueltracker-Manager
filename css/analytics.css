@@ -12,8 +12,7 @@ body[data-theme="analytics"]{
     linear-gradient(180deg, #050913 0%, #070b15 100%);
 }
 
-.analytics-filter-card,
-.analytics-compare-card{
+.analytics-filter-card{
   margin-top:16px;
 }
 
@@ -30,14 +29,27 @@ body[data-theme="analytics"]{
   font-size:18px;
 }
 
+/* FIXED: mini KPI cards grid */
 .analytics-mini-kpis{
+  display:grid;
   grid-template-columns: repeat(2, minmax(0,1fr));
   gap:16px;
+  align-items:stretch;
 }
+
 @media (min-width:1100px){
   .analytics-mini-kpis{
     grid-template-columns: repeat(4, minmax(0,1fr));
   }
+}
+
+/* make sure cards inside grid behave properly */
+.analytics-mini-kpis > .card{
+  min-width:0;
+}
+
+.analytics-mini-kpis .inner{
+  height:100%;
 }
 
 .v.mini{
@@ -45,76 +57,44 @@ body[data-theme="analytics"]{
   margin-top:10px;
 }
 
-.compare-result{
-  margin-top:14px;
-  padding:14px;
-  border-radius:16px;
-  background: rgba(0,0,0,.18);
-  border:1px solid rgba(255,255,255,.10);
-}
-
-.compare-grid{
+.analytics-filter-row{
   display:grid;
   grid-template-columns: repeat(2, minmax(0,1fr));
   gap:12px;
 }
 
-.compare-block{
-  border-radius:16px;
-  padding:14px;
-  background: rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.10);
-}
-
-.compare-block h5{
-  margin:0 0 10px;
-  font-size:14px;
-}
-
-.compare-line{
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-  padding:6px 0;
-  border-bottom:1px solid rgba(255,255,255,.06);
-}
-
-.compare-line:last-child{
-  border-bottom:none;
-}
-
-.compare-winner{
-  margin-top:12px;
-  padding:10px 12px;
-  border-radius:14px;
-  background: rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.12);
-  font-size:13px;
-}
-
-.analytics-filter-row{
-  grid-template-columns: repeat(2, minmax(0,1fr));
-}
 @media (min-width:1100px){
   .analytics-filter-row{
-    grid-template-columns: repeat(8, minmax(0,1fr));
+    grid-template-columns: repeat(6, minmax(0,1fr));
   }
 }
 
-.analytics-compare-row{
-  grid-template-columns: repeat(1, minmax(0,1fr));
-}
-@media (min-width:1100px){
-  .analytics-compare-row{
-    grid-template-columns: repeat(3, minmax(0,1fr));
-  }
+.split .card{
+  min-width:0;
 }
 
-#analyticsTbody td.small,
-#analyticsTbody .small{
-  color: var(--muted);
+.split .panel,
+.analytics-section .panel,
+.analytics-filter-card .panel{
+  min-width:0;
 }
 
 canvas{
-  max-height: 320px;
+  display:block;
+  width:100% !important;
+}
+
+#chartOverallSpend,
+#chartOverallDistance,
+#chartOverallDistribution,
+#chartOverallSpendShare,
+#chartCustom,
+#chartFuelMonthly,
+#chartFuelCostPerKm,
+#chartRideDistance,
+#chartRideCount,
+#chartExpenseTrend,
+#chartExpenseSplit{
+  height:320px !important;
+  max-height:320px !important;
 }

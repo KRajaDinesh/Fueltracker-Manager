@@ -367,27 +367,29 @@ function mappingHtml(mapping) {
    KPIs
 ----------------------------- */
 
-function renderKPIs(rides) {
+function renderKPIs(rides, fuelWindows) {
   const count = rides.length;
   let totalDistance = 0;
   let totalMinutes = 0;
-
-  let longestKm = 0;
-  let longestRide = null;
+  let totalEstLitres = 0;
+  let totalEstCost = 0;
 
   for (const r of rides) {
     const d = rideDerived(r);
 
     if (typeof d.distance === "number" && d.distance > 0) {
       totalDistance += d.distance;
-
-      if (d.distance > longestKm) {
-        longestKm = d.distance;
-        longestRide = r;
-      }
     }
 
     totalMinutes += d.travelMins;
+
+    const mapping = mapRideToFuelWindows(r, fuelWindows);
+    const s = mapping?.summary;
+
+    if (s && s.status !== "waiting" && s.status !== "no_match") {
+      totalEstLitres += num(s.totalEstLitres);
+      totalEstCost += num(s.totalEstCost);
+    }
   }
 
   const hours = Math.floor(totalMinutes / 60);
@@ -396,30 +398,14 @@ function renderKPIs(rides) {
   const elCount = document.getElementById("rkpiCount");
   const elDist = document.getElementById("rkpiDistance");
   const elTime = document.getElementById("rkpiTravelTime");
-  const elLongest = document.getElementById("rkpiLongest");
-  const elLongestMeta = document.getElementById("rkpiLongestMeta");
+  const elFuelUsed = document.getElementById("rkpiFuelUsed");
+  const elFuelCost = document.getElementById("rkpiFuelCost");
 
   if (elCount) elCount.textContent = String(count);
   if (elDist) elDist.textContent = `${totalDistance.toFixed(1)} km`;
   if (elTime) elTime.textContent = `${hours}h ${mins}m`;
-
-  if (elLongest) elLongest.textContent = longestRide ? `${longestKm.toFixed(1)} km` : "—";
-
-  if (elLongestMeta) {
-    if (!longestRide) {
-      elLongestMeta.textContent = "—";
-    } else {
-      const route = longestRide.routeVia || "—";
-      const dateLine =
-        longestRide.dateFrom
-          ? (longestRide.dateTo && longestRide.dateTo !== longestRide.dateFrom
-              ? `${longestRide.dateFrom} → ${longestRide.dateTo}`
-              : `${longestRide.dateFrom}`)
-          : "—";
-
-      elLongestMeta.textContent = `${route} • ${dateLine}`;
-    }
-  }
+  if (elFuelUsed) elFuelUsed.textContent = totalEstLitres > 0 ? `${totalEstLitres.toFixed(2)} L` : "—";
+  if (elFuelCost) elFuelCost.textContent = totalEstCost > 0 ? `Est. Cost: ${money(totalEstCost)}` : "Est. Cost: —";
 }
 
 /* -----------------------------
@@ -673,7 +659,7 @@ export async function initRides() {
   let fuel = (await apiGet("/api/fuel")).map(normalizeFuel);
   let fuelWindows = buildFuelWindows(fuel);
 
-  renderKPIs(rides);
+  renderKPIs(rides, fuelWindows);
   renderTable(rides, fuelWindows);
 
   const form = document.getElementById("rideFormInline");
@@ -720,7 +706,7 @@ export async function initRides() {
     fuel = (await apiGet("/api/fuel")).map(normalizeFuel);
     fuelWindows = buildFuelWindows(fuel);
 
-    renderKPIs(rides);
+    renderKPIs(rides, fuelWindows);
     renderTable(rides, fuelWindows);
     form.reset();
   });
@@ -746,7 +732,7 @@ export async function initRides() {
         fuel = (await apiGet("/api/fuel")).map(normalizeFuel);
         fuelWindows = buildFuelWindows(fuel);
 
-        renderKPIs(rides);
+        renderKPIs(rides, fuelWindows);
         renderTable(rides, fuelWindows);
       });
     }
@@ -759,7 +745,7 @@ export async function initRides() {
       fuel = (await apiGet("/api/fuel")).map(normalizeFuel);
       fuelWindows = buildFuelWindows(fuel);
 
-      renderKPIs(rides);
+      renderKPIs(rides, fuelWindows);
       renderTable(rides, fuelWindows);
     }
   });

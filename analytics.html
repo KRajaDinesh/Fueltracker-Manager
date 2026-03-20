@@ -90,36 +90,83 @@
     <header class="topbar">
       <div class="title">
         <h2>Analytics Dashboard</h2>
-        <p>Overall insights • Module-wise trends • Compare • Record explorer</p>
+        <p>Overall mixed insights • Custom graph builder • Module analytics</p>
       </div>
     </header>
 
-    <!-- Filter Card -->
+    <!-- Overall KPI Cards -->
+    <section class="grid kpis">
+      <div class="card grad-fuel"><div class="inner">
+        <div class="k"><h3>Total Fuel Spend</h3><span class="badge">Overall</span></div>
+        <div class="v" id="anTotalFuelSpend">—</div>
+        <div class="small" id="anFuelRange">Range: —</div>
+      </div></div>
+
+      <div class="card grad-money"><div class="inner">
+        <div class="k"><h3>Total Distance Travelled</h3><span class="badge">Overall</span></div>
+        <div class="v" id="anTotalDistance">—</div>
+        <div class="small" id="anDistanceMeta">Based on overall travelled distance</div>
+      </div></div>
+
+      <div class="card grad-count"><div class="inner">
+        <div class="k"><h3>Total Expenses</h3><span class="badge">Overall</span></div>
+        <div class="v" id="anTotalExpenses">—</div>
+        <div class="small" id="anExpenseMeta">Service + Self</div>
+      </div></div>
+
+      <div class="card grad-avg"><div class="inner">
+        <div class="k"><h3>Overall Cost / KM</h3><span class="badge">Estimate</span></div>
+        <div class="v" id="anCostPerKm">—</div>
+        <div class="small" id="anLastUpdated">Last update: —</div>
+      </div></div>
+    </section>
+
+    <!-- Overall Mixed Charts -->
+    <div class="grid" style="margin-top:16px;">
+      <div class="split">
+        <div class="card"><div class="panel">
+          <h4>Overall Spend Trend</h4>
+          <canvas id="chartOverallSpend"></canvas>
+          <p class="small" style="margin:8px 0 0">Fuel spend + expense spend by month</p>
+        </div></div>
+
+        <div class="card"><div class="panel">
+          <h4>Overall Distance Trend</h4>
+          <canvas id="chartOverallDistance"></canvas>
+          <p class="small" style="margin:8px 0 0">Ride distance and fuel-window distance by month</p>
+        </div></div>
+      </div>
+
+      <div class="split" style="margin-top:16px;">
+        <div class="card"><div class="panel">
+  <h4>Amount Spent in Different Modules</h4>
+  <canvas id="chartOverallDistribution"></canvas>
+  <p class="small" style="margin:8px 0 0">Fuel spend, ride misc spend, and maintenance spend share</p>
+</div></div>
+
+        <div class="card"><div class="panel">
+          <h4>Overall Spend Distribution</h4>
+          <canvas id="chartOverallSpendShare"></canvas>
+          <p class="small" style="margin:8px 0 0">Fuel vs Service vs Self spend share</p>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- Graph Builder -->
     <section class="card analytics-filter-card">
       <div class="panel">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
-          <h4 style="margin:0;">Analytics Filters</h4>
+          <h4 style="margin:0;">Graph Builder</h4>
           <div class="actions" style="margin-top:0;">
-            <button id="applyAnalyticsFilters" class="btn primary" type="button">Apply</button>
-            <button id="resetAnalyticsFilters" class="btn ghost" type="button">Reset</button>
-            <button id="toggleAnalyticsRecords" class="btn" type="button">View all</button>
+            <button id="buildCustomChart" class="btn primary" type="button">Build Graph</button>
+            <button id="resetCustomChart" class="btn ghost" type="button">Reset</button>
           </div>
         </div>
 
         <div class="row analytics-filter-row" style="margin-top:14px;">
           <div class="field">
-            <label>From Date</label>
-            <input id="anFromDate" type="date">
-          </div>
-
-          <div class="field">
-            <label>To Date</label>
-            <input id="anToDate" type="date">
-          </div>
-
-          <div class="field">
-            <label>Module</label>
-            <select id="anModule">
+            <label>Data Source</label>
+            <select id="gcSource">
               <option value="all">All Modules</option>
               <option value="fuel">Fuel</option>
               <option value="rides">Rides</option>
@@ -128,15 +175,43 @@
           </div>
 
           <div class="field">
-            <label>Sort By</label>
-            <select id="anSortBy">
-              <option value="latest">Latest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="amountHigh">Amount High to Low</option>
-              <option value="amountLow">Amount Low to High</option>
-              <option value="distanceHigh">Distance High to Low</option>
-              <option value="distanceLow">Distance Low to High</option>
+            <label>Graph Type</label>
+            <select id="gcType">
+              <option value="line">Line</option>
+              <option value="bar">Bar</option>
+              <option value="doughnut">Doughnut</option>
+              <option value="pie">Pie</option>
             </select>
+          </div>
+
+          <div class="field">
+            <label>Group By / X-Axis</label>
+            <select id="gcXAxis">
+              <option value="month">Month</option>
+              <option value="module">Module</option>
+              <option value="type">Type</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Y-Axis / Metric</label>
+            <select id="gcYAxis">
+              <option value="amount">Amount</option>
+              <option value="distance">Distance</option>
+              <option value="count">Record Count</option>
+              <option value="litres">Litres</option>
+              <option value="misc">Misc Amount</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>From Date</label>
+            <input id="anFromDate" type="date">
+          </div>
+
+          <div class="field">
+            <label>To Date</label>
+            <input id="anToDate" type="date">
           </div>
 
           <div class="field">
@@ -158,53 +233,45 @@
             <label>Max Distance</label>
             <input id="anMaxDistance" type="number" step="0.1" placeholder="1000">
           </div>
+
+          <div class="field">
+            <label>Sort By</label>
+            <select id="anSortBy">
+              <option value="latest">Latest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="amountHigh">Amount High to Low</option>
+              <option value="amountLow">Amount Low to High</option>
+              <option value="distanceHigh">Distance High to Low</option>
+              <option value="distanceLow">Distance Low to High</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Explorer Module</label>
+            <select id="anModule">
+              <option value="all">All Modules</option>
+              <option value="fuel">Fuel</option>
+              <option value="rides">Rides</option>
+              <option value="expenses">Expenses</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px;">
+          <div class="panel">
+            <h4 style="margin:0 0 12px;">Custom Graph</h4>
+            <canvas id="chartCustom"></canvas>
+            <p class="small" style="margin:8px 0 0">Choose graph type, source, x-axis and y-axis above.</p>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="applyAnalyticsFilters" class="btn" type="button">Apply Data Filters</button>
+          <button id="resetAnalyticsFilters" class="btn ghost" type="button">Reset Filters</button>
+          <button id="toggleAnalyticsRecords" class="btn" type="button">View all</button>
         </div>
       </div>
     </section>
-
-    <!-- Overall KPI Cards -->
-    <section class="grid kpis">
-      <div class="card grad-fuel"><div class="inner">
-        <div class="k"><h3>Total Fuel Spend</h3><span class="badge">Overall</span></div>
-        <div class="v" id="anTotalFuelSpend">—</div>
-        <div class="small" id="anFuelRange">Range: —</div>
-      </div></div>
-
-      <div class="card grad-money"><div class="inner">
-  <div class="k"><h3>Total Distance Travelled</h3><span class="badge">Overall</span></div>
-  <div class="v" id="anTotalDistance">—</div>
-  <div class="small" id="anDistanceMeta">Based on overall travelled distance</div>
-</div></div>
-
-      <div class="card grad-count"><div class="inner">
-        <div class="k"><h3>Total Expenses</h3><span class="badge">Overall</span></div>
-        <div class="v" id="anTotalExpenses">—</div>
-        <div class="small" id="anExpenseMeta">Service + Self</div>
-      </div></div>
-
-      <div class="card grad-avg"><div class="inner">
-        <div class="k"><h3>Overall Cost / KM</h3><span class="badge">Estimate</span></div>
-        <div class="v" id="anCostPerKm">—</div>
-        <div class="small" id="anLastUpdated">Last update: —</div>
-      </div></div>
-    </section>
-
-    <!-- Overall Charts -->
-    <div class="grid" style="margin-top:16px;">
-      <div class="split">
-        <div class="card"><div class="panel">
-          <h4>Overall Spend Trend</h4>
-          <canvas id="chartOverallSpend"></canvas>
-          <p class="small" style="margin:8px 0 0">Fuel spend + expense trend by month</p>
-        </div></div>
-
-        <div class="card"><div class="panel">
-          <h4>Overall Distance Trend</h4>
-          <canvas id="chartOverallDistance"></canvas>
-          <p class="small" style="margin:8px 0 0">Monthly ride distance and fuel-window distance</p>
-        </div></div>
-      </div>
-    </div>
 
     <!-- Fuel Analytics -->
     <section class="analytics-section">
@@ -336,45 +403,6 @@
           <canvas id="chartExpenseSplit"></canvas>
           <p class="small" style="margin:8px 0 0">Service vs self maintenance</p>
         </div></div>
-      </div>
-    </section>
-
-    <!-- Comparison -->
-    <section class="card analytics-compare-card">
-      <div class="panel">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
-          <h4 style="margin:0;">Comparison</h4>
-        </div>
-
-        <div class="row analytics-compare-row" style="margin-top:14px;">
-          <div class="field">
-            <label>Compare Type</label>
-            <select id="anCompareType">
-              <option value="fuel">Fuel vs Fuel</option>
-              <option value="rides">Ride vs Ride</option>
-              <option value="expenses">Expense vs Expense</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label>Record A</label>
-            <select id="anCompareA"></select>
-          </div>
-
-          <div class="field">
-            <label>Record B</label>
-            <select id="anCompareB"></select>
-          </div>
-        </div>
-
-        <div class="actions">
-          <button id="runCompare" class="btn primary" type="button">Compare</button>
-          <button id="clearCompare" class="btn ghost" type="button">Clear</button>
-        </div>
-
-        <div id="compareResult" class="compare-result">
-          <div class="small">Comparison result will appear here.</div>
-        </div>
       </div>
     </section>
 

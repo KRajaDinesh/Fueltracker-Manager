@@ -94,12 +94,10 @@ async function loadExpenses() {
 
 /* ----------------------------
    FUEL LOGIC
-   aligned with fuel.js
 ----------------------------- */
 
 function computeFuelDerived(records) {
   const list = records.map(r => ({ ...r }));
-
   const byOdo = [...list].sort((a, b) => num(a.odometer) - num(b.odometer));
 
   for (const r of byOdo) {
@@ -152,7 +150,6 @@ function fuelKpi(records) {
 
 /* ----------------------------
    RIDES LOGIC
-   aligned with rides.js
 ----------------------------- */
 
 function normalizeRide(r) {
@@ -216,7 +213,6 @@ function normalizeRides(rides) {
 
 /* ----------------------------
    EXPENSES LOGIC
-   aligned with expenses.js
 ----------------------------- */
 
 function normalizeExpenses(expenses) {
@@ -267,6 +263,16 @@ function monthKey(dateStr) {
   const d = new Date(dateStr);
   if (isNaN(d)) return "";
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function latestDate(values) {
+  const dates = values
+    .map(v => new Date(v))
+    .filter(d => !isNaN(d))
+    .sort((a, b) => b - a);
+
+  if (!dates.length) return "—";
+  return dates[0].toISOString().slice(0, 10);
 }
 
 function groupFuelMonthly(records) {
@@ -321,7 +327,6 @@ function groupExpenseMonthly(expensesAll) {
   for (const e of expensesAll) {
     const key = monthKey(e._date);
     if (!key) continue;
-
     const cur = map.get(key) || 0;
     map.set(key, cur + num(e._amount));
   }
@@ -335,7 +340,6 @@ function groupExpenseMonthly(expensesAll) {
 
 function mergeMonthlySpend(fuelMonthly, expenseMonthly) {
   const keys = [...new Set([...fuelMonthly.labels, ...expenseMonthly.labels])].sort();
-
   const fuelMap = new Map(fuelMonthly.labels.map((k, i) => [k, fuelMonthly.amount[i]]));
   const expMap = new Map(expenseMonthly.labels.map((k, i) => [k, expenseMonthly.amount[i]]));
 
@@ -363,16 +367,6 @@ function mergeMonthlyDistance(rideMonthly, fuelRecords) {
     rides: keys.map(k => rideMonthly.labels.includes(k) ? rideMonthly.distance[rideMonthly.labels.indexOf(k)] : 0),
     fuelWindows: keys.map(k => fuelMap.get(k) || 0)
   };
-}
-
-function latestDate(values) {
-  const dates = values
-    .map(v => new Date(v))
-    .filter(d => !isNaN(d))
-    .sort((a, b) => b - a);
-
-  if (!dates.length) return "—";
-  return dates[0].toISOString().slice(0, 10);
 }
 
 function applyFilters(data, filters) {
@@ -416,8 +410,7 @@ function applyFilters(data, filters) {
 
   const expensesAll = data.expenses.all.filter(e =>
     inDateRange(e._date) &&
-    inAmountRange(e._amount) &&
-    inDistanceRange(0)
+    inAmountRange(e._amount)
   );
 
   const service = expensesAll.filter(e => e._type === "service");
@@ -455,6 +448,47 @@ function sortRecords(rows, sortBy) {
   return copy;
 }
 
+function buildExplorerRows(filtered, sortBy, moduleFilter) {
+  let rows = [];
+
+  if (moduleFilter === "all" || moduleFilter === "fuel") {
+    rows.push(...filtered.fuel.map(r => ({
+      date: r.date,
+      module: "Fuel",
+      title: r.station || r.location || "Fuel Record",
+      amount: num(r.amountPaid),
+      distance: num(r._distance),
+      notes: r.remarks || ""
+    })));
+  }
+
+  if (moduleFilter === "all" || moduleFilter === "rides") {
+    rows.push(...filtered.rides.map(r => ({
+      date: r._date,
+      module: "Rides",
+      title: r._title,
+      amount: num(r.miscAmt),
+      distance: num(r._distance),
+      notes: r.remarks || r.routeVia || ""
+    })));
+  }
+
+  if (moduleFilter === "all" || moduleFilter === "expenses") {
+    rows.push(...filtered.expenses.all.map(e => ({
+      date: e._date,
+      module: e._type === "service" ? "Expense / Service" : "Expense / Self",
+      title: e._type === "service"
+        ? `${e._title}${e.location ? " • " + e.location : ""}`
+        : `${e._title}${e._company ? " • " + e._company : ""}`,
+      amount: num(e._amount),
+      distance: 0,
+      notes: e._notes || ""
+    })));
+  }
+
+  return sortRecords(rows, sortBy);
+}
+
 /* ----------------------------
    CHARTS
 ----------------------------- */
@@ -468,42 +502,61 @@ function destroyChart(key) {
   }
 }
 
+function baseChartOptions() {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    resizeDelay: 100,
+    plugins: {
+      legend: {
+        labels: { color: "rgba(255,255,255,.82)" }
+      }
+    },
+    scales: {
+      x: {
+        ticks: { color: "rgba(255,255,255,.75)" },
+        grid: { color: "rgba(255,255,255,.06)" }
+      },
+      y: {
+        ticks: { color: "rgba(255,255,255,.75)" },
+        grid: { color: "rgba(255,255,255,.06)" }
+      }
+    }
+  };
+}
+
 function buildLineChart(canvasId, labels, datasets) {
   const el = document.getElementById(canvasId);
   if (!el) return;
-
   destroyChart(canvasId);
+
   charts[canvasId] = new Chart(el, {
     type: "line",
     data: { labels, datasets },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: "index", intersect: false },
-      plugins: {
-        legend: {
-          labels: { color: "rgba(255,255,255,.82)" }
-        }
-      },
-      scales: {
-        x: {
-          ticks: { color: "rgba(255,255,255,.75)" },
-          grid: { color: "rgba(255,255,255,.06)" }
-        },
-        y: {
-          ticks: { color: "rgba(255,255,255,.75)" },
-          grid: { color: "rgba(255,255,255,.06)" }
-        }
-      }
+      ...baseChartOptions(),
+      interaction: { mode: "index", intersect: false }
     }
+  });
+}
+
+function buildBarChart(canvasId, labels, datasets) {
+  const el = document.getElementById(canvasId);
+  if (!el) return;
+  destroyChart(canvasId);
+
+  charts[canvasId] = new Chart(el, {
+    type: "bar",
+    data: { labels, datasets },
+    options: baseChartOptions()
   });
 }
 
 function buildBarLineChart(canvasId, labels, barLabel, barData, lineLabel, lineData) {
   const el = document.getElementById(canvasId);
   if (!el) return;
-
   destroyChart(canvasId);
+
   charts[canvasId] = new Chart(el, {
     data: {
       labels,
@@ -523,35 +576,17 @@ function buildBarLineChart(canvasId, labels, barLabel, barData, lineLabel, lineD
         }
       ]
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          labels: { color: "rgba(255,255,255,.82)" }
-        }
-      },
-      scales: {
-        x: {
-          ticks: { color: "rgba(255,255,255,.75)" },
-          grid: { color: "rgba(255,255,255,.06)" }
-        },
-        y: {
-          ticks: { color: "rgba(255,255,255,.75)" },
-          grid: { color: "rgba(255,255,255,.06)" }
-        }
-      }
-    }
+    options: baseChartOptions()
   });
 }
 
-function buildDoughnutChart(canvasId, labels, data) {
+function buildDoughnutChart(canvasId, labels, data, type = "doughnut") {
   const el = document.getElementById(canvasId);
   if (!el) return;
-
   destroyChart(canvasId);
+
   charts[canvasId] = new Chart(el, {
-    type: "doughnut",
+    type,
     data: {
       labels,
       datasets: [{ data }]
@@ -569,6 +604,247 @@ function buildDoughnutChart(canvasId, labels, data) {
 }
 
 /* ----------------------------
+   CUSTOM GRAPH BUILDER
+----------------------------- */
+
+function buildCustomGraphData(filtered, source, xAxis, yAxis) {
+  if (source === "fuel") {
+    if (xAxis === "month") {
+      const m = groupFuelMonthly(filtered.fuel);
+      if (yAxis === "litres") return { labels: m.labels, data: m.litres, label: "Litres" };
+      if (yAxis === "count") {
+        const countMap = new Map();
+        for (const r of filtered.fuel) {
+          const key = monthKey(r.date);
+          if (!key) continue;
+          countMap.set(key, (countMap.get(key) || 0) + 1);
+        }
+        const labels = [...countMap.keys()].sort();
+        return {
+          labels,
+          data: labels.map(k => countMap.get(k)),
+          label: "Fuel Records"
+        };
+      }
+      return { labels: m.labels, data: m.amount, label: "Fuel Amount" };
+    }
+
+    if (xAxis === "module") {
+      const stats = fuelKpi(filtered.fuel);
+      if (yAxis === "litres") return { labels: ["Fuel"], data: [stats.litres], label: "Litres" };
+      if (yAxis === "count") return { labels: ["Fuel"], data: [stats.count], label: "Fuel Records" };
+      if (yAxis === "distance") return { labels: ["Fuel"], data: [stats.totalDist], label: "Fuel Distance" };
+      return { labels: ["Fuel"], data: [stats.spent], label: "Fuel Amount" };
+    }
+  }
+
+  if (source === "rides") {
+    if (xAxis === "month") {
+      const m = groupRideMonthly(filtered.rides);
+      if (yAxis === "count") return { labels: m.labels, data: m.count, label: "Ride Count" };
+      if (yAxis === "misc") return { labels: m.labels, data: m.misc, label: "Ride Misc" };
+      return { labels: m.labels, data: m.distance, label: "Ride Distance" };
+    }
+
+    if (xAxis === "module") {
+      const totalDist = filtered.rides.reduce((s, r) => s + num(r._distance), 0);
+      const totalMisc = filtered.rides.reduce((s, r) => s + num(r.miscAmt), 0);
+      if (yAxis === "count") return { labels: ["Rides"], data: [filtered.rides.length], label: "Ride Count" };
+      if (yAxis === "misc") return { labels: ["Rides"], data: [totalMisc], label: "Ride Misc" };
+      return { labels: ["Rides"], data: [totalDist], label: "Ride Distance" };
+    }
+  }
+
+  if (source === "expenses") {
+    if (xAxis === "month") {
+      const m = groupExpenseMonthly(filtered.expenses.all);
+      if (yAxis === "count") {
+        const countMap = new Map();
+        for (const e of filtered.expenses.all) {
+          const key = monthKey(e._date);
+          if (!key) continue;
+          countMap.set(key, (countMap.get(key) || 0) + 1);
+        }
+        const labels = [...countMap.keys()].sort();
+        return { labels, data: labels.map(k => countMap.get(k)), label: "Expense Records" };
+      }
+      return { labels: m.labels, data: m.amount, label: "Expense Amount" };
+    }
+
+    if (xAxis === "type") {
+      const serviceSpend = filtered.expenses.service.reduce((s, e) => s + num(e._amount), 0);
+      const selfSpend = filtered.expenses.self.reduce((s, e) => s + num(e._amount), 0);
+
+      if (yAxis === "count") {
+        return {
+          labels: ["Service", "Self"],
+          data: [filtered.expenses.service.length, filtered.expenses.self.length],
+          label: "Expense Count"
+        };
+      }
+
+      return {
+        labels: ["Service", "Self"],
+        data: [serviceSpend, selfSpend],
+        label: "Expense Amount"
+      };
+    }
+
+    if (xAxis === "module") {
+      const total = filtered.expenses.all.reduce((s, e) => s + num(e._amount), 0);
+      if (yAxis === "count") return { labels: ["Expenses"], data: [filtered.expenses.all.length], label: "Expense Count" };
+      return { labels: ["Expenses"], data: [total], label: "Expense Amount" };
+    }
+  }
+
+  if (source === "all") {
+    if (xAxis === "month") {
+      const fuelMonthly = groupFuelMonthly(filtered.fuel);
+      const rideMonthly = groupRideMonthly(filtered.rides);
+      const expenseMonthly = groupExpenseMonthly(filtered.expenses.all);
+
+      const keys = [...new Set([
+        ...fuelMonthly.labels,
+        ...rideMonthly.labels,
+        ...expenseMonthly.labels
+      ])].sort();
+
+      if (yAxis === "amount") {
+        const fuelMap = new Map(fuelMonthly.labels.map((k, i) => [k, fuelMonthly.amount[i]]));
+        const expMap = new Map(expenseMonthly.labels.map((k, i) => [k, expenseMonthly.amount[i]]));
+        return {
+          labels: keys,
+          data: keys.map(k => (fuelMap.get(k) || 0) + (expMap.get(k) || 0)),
+          label: "Overall Amount"
+        };
+      }
+
+      if (yAxis === "distance") {
+        const rideMap = new Map(rideMonthly.labels.map((k, i) => [k, rideMonthly.distance[i]]));
+        return {
+          labels: keys,
+          data: keys.map(k => rideMap.get(k) || 0),
+          label: "Overall Distance"
+        };
+      }
+
+      if (yAxis === "count") {
+        const countMap = new Map();
+        for (const r of filtered.fuel) {
+          const key = monthKey(r.date);
+          if (!key) continue;
+          countMap.set(key, (countMap.get(key) || 0) + 1);
+        }
+        for (const r of filtered.rides) {
+          const key = monthKey(r._date);
+          if (!key) continue;
+          countMap.set(key, (countMap.get(key) || 0) + 1);
+        }
+        for (const e of filtered.expenses.all) {
+          const key = monthKey(e._date);
+          if (!key) continue;
+          countMap.set(key, (countMap.get(key) || 0) + 1);
+        }
+        const labels = [...countMap.keys()].sort();
+        return { labels, data: labels.map(k => countMap.get(k)), label: "Overall Records" };
+      }
+
+      if (yAxis === "litres") {
+        return { labels: fuelMonthly.labels, data: fuelMonthly.litres, label: "Fuel Litres" };
+      }
+    }
+
+    if (xAxis === "module") {
+      const fuelStats = fuelKpi(filtered.fuel);
+      const rideTotal = filtered.rides.reduce((s, r) => s + num(r._distance), 0);
+      const expenseTotal = filtered.expenses.all.reduce((s, e) => s + num(e._amount), 0);
+
+      if (yAxis === "amount") {
+        return {
+          labels: ["Fuel", "Rides", "Expenses"],
+          data: [fuelStats.spent, filtered.rides.reduce((s, r) => s + num(r.miscAmt), 0), expenseTotal],
+          label: "Amount"
+        };
+      }
+
+      if (yAxis === "distance") {
+        return {
+          labels: ["Fuel", "Rides"],
+          data: [fuelStats.totalDist, rideTotal],
+          label: "Distance"
+        };
+      }
+
+      if (yAxis === "count") {
+        return {
+          labels: ["Fuel", "Rides", "Expenses"],
+          data: [filtered.fuel.length, filtered.rides.length, filtered.expenses.all.length],
+          label: "Record Count"
+        };
+      }
+
+      if (yAxis === "litres") {
+        return {
+          labels: ["Fuel"],
+          data: [fuelStats.litres],
+          label: "Litres"
+        };
+      }
+    }
+
+    if (xAxis === "type") {
+      const serviceSpend = filtered.expenses.service.reduce((s, e) => s + num(e._amount), 0);
+      const selfSpend = filtered.expenses.self.reduce((s, e) => s + num(e._amount), 0);
+
+      if (yAxis === "amount") {
+        return {
+          labels: ["Fuel Spend", "Service Spend", "Self Spend"],
+          data: [fuelKpi(filtered.fuel).spent, serviceSpend, selfSpend],
+          label: "Amount"
+        };
+      }
+
+      if (yAxis === "count") {
+        return {
+          labels: ["Fuel Records", "Ride Records", "Expense Records"],
+          data: [filtered.fuel.length, filtered.rides.length, filtered.expenses.all.length],
+          label: "Record Count"
+        };
+      }
+    }
+  }
+
+  return { labels: ["No Data"], data: [0], label: "No Data" };
+}
+
+function renderCustomGraph(filtered) {
+  const source = $("#gcSource")?.value || "all";
+  const type = $("#gcType")?.value || "line";
+  const xAxis = $("#gcXAxis")?.value || "month";
+  const yAxis = $("#gcYAxis")?.value || "amount";
+
+  const result = buildCustomGraphData(filtered, source, xAxis, yAxis);
+
+  if (type === "line") {
+    buildLineChart("chartCustom", result.labels, [
+      { label: result.label, data: result.data, tension: 0.25, fill: false }
+    ]);
+    return;
+  }
+
+  if (type === "bar") {
+    buildBarChart("chartCustom", result.labels, [
+      { label: result.label, data: result.data }
+    ]);
+    return;
+  }
+
+  if (type === "doughnut" || type === "pie") {
+    buildDoughnutChart("chartCustom", result.labels, result.data, type);
+  }
+}
+
+/* ----------------------------
    RENDER
 ----------------------------- */
 
@@ -577,10 +853,7 @@ function renderOverall(filtered) {
   const rideTotal = filtered.rides.reduce((s, r) => s + num(r._distance), 0);
   const expenseTotal = filtered.expenses.all.reduce((s, e) => s + num(e._amount), 0);
 
-  // Total distance travelled should not be only ride kms.
-  // Prefer overall odometer/fuel-window travelled distance when available.
   const totalDistanceTravelled = fuelStats.totalDist > 0 ? fuelStats.totalDist : rideTotal;
-
   const overallCost = fuelStats.spent + expenseTotal;
   const overallCpk = totalDistanceTravelled > 0 ? overallCost / totalDistanceTravelled : null;
 
@@ -642,7 +915,7 @@ function renderExpenseSection(filtered) {
   $("#anHighestExpense").textContent = highest ? fmtMoney(highest) : "—";
 }
 
-function renderCharts(filtered) {
+function renderOverallCharts(filtered) {
   const fuelMonthly = groupFuelMonthly(filtered.fuel);
   const rideMonthly = groupRideMonthly(filtered.rides);
   const expenseMonthly = groupExpenseMonthly(filtered.expenses.all);
@@ -659,6 +932,31 @@ function renderCharts(filtered) {
     { label: "Fuel Window Distance", data: overallDistance.fuelWindows, tension: 0.25, fill: false }
   ]);
 
+  const fuelSpend = fuelKpi(filtered.fuel).spent;
+  const rideMiscSpend = filtered.rides.reduce((s, r) => s + num(r.miscAmt), 0);
+  const expenseSpend = filtered.expenses.all.reduce((s, e) => s + num(e._amount), 0);
+
+  buildDoughnutChart(
+    "chartOverallDistribution",
+    ["Fuel Spend", "Ride Misc", "Maintenance Spend"],
+    [fuelSpend, rideMiscSpend, expenseSpend]
+  );
+
+  const serviceSpend = filtered.expenses.service.reduce((s, x) => s + num(x._amount), 0);
+  const selfSpend = filtered.expenses.self.reduce((s, x) => s + num(x._amount), 0);
+
+  buildDoughnutChart(
+    "chartOverallSpendShare",
+    ["Fuel Spend", "Service Spend", "Self Spend"],
+    [fuelSpend, serviceSpend, selfSpend]
+  );
+}
+
+function renderModuleCharts(filtered) {
+  const fuelMonthly = groupFuelMonthly(filtered.fuel);
+  const rideMonthly = groupRideMonthly(filtered.rides);
+  const expenseMonthly = groupExpenseMonthly(filtered.expenses.all);
+
   buildBarLineChart(
     "chartFuelMonthly",
     fuelMonthly.labels,
@@ -672,82 +970,31 @@ function renderCharts(filtered) {
     .filter(r => typeof r._distance === "number" && r._distance > 0)
     .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-  buildLineChart(
-    "chartFuelCostPerKm",
-    fuelPoints.map(r => fmtDate(r.date)),
-    [
-      {
-        label: "Cost per KM",
-        data: fuelPoints.map(r => Number((num(r.amountPaid) / num(r._distance)).toFixed(2))),
-        tension: 0.25,
-        fill: false
-      }
-    ]
-  );
+  buildLineChart("chartFuelCostPerKm", fuelPoints.map(r => fmtDate(r.date)), [
+    {
+      label: "Cost per KM",
+      data: fuelPoints.map(r => Number((num(r.amountPaid) / num(r._distance)).toFixed(2))),
+      tension: 0.25,
+      fill: false
+    }
+  ]);
 
-  buildLineChart(
-    "chartRideDistance",
-    rideMonthly.labels,
-    [{ label: "Ride Distance", data: rideMonthly.distance, tension: 0.25, fill: false }]
-  );
+  buildLineChart("chartRideDistance", rideMonthly.labels, [
+    { label: "Ride Distance", data: rideMonthly.distance, tension: 0.25, fill: false }
+  ]);
 
-  buildLineChart(
-    "chartRideCount",
-    rideMonthly.labels,
-    [{ label: "Ride Count", data: rideMonthly.count, tension: 0.25, fill: false }]
-  );
+  buildLineChart("chartRideCount", rideMonthly.labels, [
+    { label: "Ride Count", data: rideMonthly.count, tension: 0.25, fill: false }
+  ]);
 
-  buildLineChart(
-    "chartExpenseTrend",
-    expenseMonthly.labels,
-    [{ label: "Expense Amount", data: expenseMonthly.amount, tension: 0.25, fill: false }]
-  );
+  buildLineChart("chartExpenseTrend", expenseMonthly.labels, [
+    { label: "Expense Amount", data: expenseMonthly.amount, tension: 0.25, fill: false }
+  ]);
 
   const serviceSpend = filtered.expenses.service.reduce((s, x) => s + num(x._amount), 0);
   const selfSpend = filtered.expenses.self.reduce((s, x) => s + num(x._amount), 0);
 
   buildDoughnutChart("chartExpenseSplit", ["Service", "Self"], [serviceSpend, selfSpend]);
-}
-
-function buildExplorerRows(filtered, sortBy, moduleFilter) {
-  let rows = [];
-
-  if (moduleFilter === "all" || moduleFilter === "fuel") {
-    rows.push(...filtered.fuel.map(r => ({
-      date: r.date,
-      module: "Fuel",
-      title: r.station || r.location || "Fuel Record",
-      amount: num(r.amountPaid),
-      distance: num(r._distance),
-      notes: r.remarks || ""
-    })));
-  }
-
-  if (moduleFilter === "all" || moduleFilter === "rides") {
-    rows.push(...filtered.rides.map(r => ({
-      date: r._date,
-      module: "Rides",
-      title: r._title,
-      amount: num(r.miscAmt),
-      distance: num(r._distance),
-      notes: r.remarks || r.routeVia || ""
-    })));
-  }
-
-  if (moduleFilter === "all" || moduleFilter === "expenses") {
-    rows.push(...filtered.expenses.all.map(e => ({
-      date: e._date,
-      module: e._type === "service" ? "Expense / Service" : "Expense / Self",
-      title: e._type === "service"
-        ? `${e._title}${e.location ? " • " + e.location : ""}`
-        : `${e._title}${e._company ? " • " + e._company : ""}`,
-      amount: num(e._amount),
-      distance: 0,
-      notes: e._notes || ""
-    })));
-  }
-
-  return sortRecords(rows, sortBy);
 }
 
 function renderExplorer(filtered, sortBy, moduleFilter) {
@@ -774,168 +1021,6 @@ function renderExplorer(filtered, sortBy, moduleFilter) {
     `;
     tbody.appendChild(tr);
   }
-}
-
-/* ----------------------------
-   COMPARE
------------------------------ */
-
-function compareOptions(filtered, type) {
-  if (type === "fuel") {
-    return filtered.fuel
-      .slice()
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .map(r => ({
-        value: r.id,
-        label: `${r.date || "—"} • ${r.station || r.location || "Fuel"} • ${fmtMoney(r.amountPaid)}`
-      }));
-  }
-
-  if (type === "rides") {
-    return filtered.rides
-      .slice()
-      .sort((a, b) => new Date(b._date) - new Date(a._date))
-      .map(r => ({
-        value: r._id,
-        label: `${r._date || "—"} • ${r._title || "Ride"} • ${fmtDistance(r._distance)}`
-      }));
-  }
-
-  return filtered.expenses.all
-    .slice()
-    .sort((a, b) => new Date(b._date) - new Date(a._date))
-    .map(e => ({
-      value: e._id,
-      label: `${e._date || "—"} • ${e._title || "Expense"} • ${fmtMoney(e._amount)}`
-    }));
-}
-
-function fillCompareSelects(filtered, type) {
-  const selA = $("#anCompareA");
-  const selB = $("#anCompareB");
-  if (!selA || !selB) return;
-
-  const options = compareOptions(filtered, type);
-  const html = [`<option value="">Select record</option>`]
-    .concat(options.map(o => `<option value="${o.value}">${o.label}</option>`))
-    .join("");
-
-  selA.innerHTML = html;
-  selB.innerHTML = html;
-}
-
-function getCompareRecord(filtered, type, id) {
-  if (!id) return null;
-  if (type === "fuel") return filtered.fuel.find(x => x.id === id) || null;
-  if (type === "rides") return filtered.rides.find(x => x._id === id) || null;
-  return filtered.expenses.all.find(x => x._id === id) || null;
-}
-
-function compareHtml(type, a, b) {
-  if (!a || !b) {
-    return `<div class="small">Select both records to compare.</div>`;
-  }
-
-  if (type === "fuel") {
-    const aMileage = a._mileage ? `${a._mileage.toFixed(2)} km/l` : "—";
-    const bMileage = b._mileage ? `${b._mileage.toFixed(2)} km/l` : "—";
-
-    const winner =
-      num(a._mileage) > num(b._mileage) ? "Record A has better mileage." :
-      num(b._mileage) > num(a._mileage) ? "Record B has better mileage." :
-      "Both are equal on mileage.";
-
-    return `
-      <div class="compare-grid">
-        <div class="compare-block">
-          <h5>Record A</h5>
-          <div class="compare-line"><span>Date</span><strong>${a.date || "—"}</strong></div>
-          <div class="compare-line"><span>Amount</span><strong>${fmtMoney(a.amountPaid)}</strong></div>
-          <div class="compare-line"><span>Litres</span><strong>${num(a.litres).toFixed(2)} L</strong></div>
-          <div class="compare-line"><span>Distance</span><strong>${a._distance ? fmtDistance(a._distance) : "—"}</strong></div>
-          <div class="compare-line"><span>Mileage</span><strong>${aMileage}</strong></div>
-        </div>
-
-        <div class="compare-block">
-          <h5>Record B</h5>
-          <div class="compare-line"><span>Date</span><strong>${b.date || "—"}</strong></div>
-          <div class="compare-line"><span>Amount</span><strong>${fmtMoney(b.amountPaid)}</strong></div>
-          <div class="compare-line"><span>Litres</span><strong>${num(b.litres).toFixed(2)} L</strong></div>
-          <div class="compare-line"><span>Distance</span><strong>${b._distance ? fmtDistance(b._distance) : "—"}</strong></div>
-          <div class="compare-line"><span>Mileage</span><strong>${bMileage}</strong></div>
-        </div>
-      </div>
-      <div class="compare-winner">${winner}</div>
-    `;
-  }
-
-  if (type === "rides") {
-    const winner =
-      num(a._distance) > num(b._distance) ? "Record A is longer." :
-      num(b._distance) > num(a._distance) ? "Record B is longer." :
-      "Both rides are equal in distance.";
-
-    return `
-      <div class="compare-grid">
-        <div class="compare-block">
-          <h5>Record A</h5>
-          <div class="compare-line"><span>Date</span><strong>${a._date || "—"}</strong></div>
-          <div class="compare-line"><span>Title</span><strong>${a._title || "Ride"}</strong></div>
-          <div class="compare-line"><span>Route</span><strong>${a.routeVia || "—"}</strong></div>
-          <div class="compare-line"><span>Distance</span><strong>${a._distance ? fmtDistance(a._distance) : "—"}</strong></div>
-          <div class="compare-line"><span>Travel Time</span><strong>${num(a._travelMins)} mins</strong></div>
-          <div class="compare-line"><span>Misc</span><strong>${fmtMoney(a.miscAmt)}</strong></div>
-        </div>
-
-        <div class="compare-block">
-          <h5>Record B</h5>
-          <div class="compare-line"><span>Date</span><strong>${b._date || "—"}</strong></div>
-          <div class="compare-line"><span>Title</span><strong>${b._title || "Ride"}</strong></div>
-          <div class="compare-line"><span>Route</span><strong>${b.routeVia || "—"}</strong></div>
-          <div class="compare-line"><span>Distance</span><strong>${b._distance ? fmtDistance(b._distance) : "—"}</strong></div>
-          <div class="compare-line"><span>Travel Time</span><strong>${num(b._travelMins)} mins</strong></div>
-          <div class="compare-line"><span>Misc</span><strong>${fmtMoney(b.miscAmt)}</strong></div>
-        </div>
-      </div>
-      <div class="compare-winner">${winner}</div>
-    `;
-  }
-
-  const winner =
-    num(a._amount) > num(b._amount) ? "Record A is more expensive." :
-    num(b._amount) > num(a._amount) ? "Record B is more expensive." :
-    "Both expenses are equal.";
-
-  return `
-    <div class="compare-grid">
-      <div class="compare-block">
-        <h5>Record A</h5>
-        <div class="compare-line"><span>Date</span><strong>${a._date || "—"}</strong></div>
-        <div class="compare-line"><span>Type</span><strong>${a._type}</strong></div>
-        <div class="compare-line"><span>Title</span><strong>${a._title || "Expense"}</strong></div>
-        <div class="compare-line"><span>Amount</span><strong>${fmtMoney(a._amount)}</strong></div>
-        ${a._type === "service"
-          ? `<div class="compare-line"><span>Service No</span><strong>${a.serviceNo || "—"}</strong></div>
-             <div class="compare-line"><span>Location</span><strong>${a.location || "—"}</strong></div>`
-          : `<div class="compare-line"><span>Company</span><strong>${a._company || "—"}</strong></div>
-             <div class="compare-line"><span>Qty</span><strong>${num(a._qty)}</strong></div>`}
-      </div>
-
-      <div class="compare-block">
-        <h5>Record B</h5>
-        <div class="compare-line"><span>Date</span><strong>${b._date || "—"}</strong></div>
-        <div class="compare-line"><span>Type</span><strong>${b._type}</strong></div>
-        <div class="compare-line"><span>Title</span><strong>${b._title || "Expense"}</strong></div>
-        <div class="compare-line"><span>Amount</span><strong>${fmtMoney(b._amount)}</strong></div>
-        ${b._type === "service"
-          ? `<div class="compare-line"><span>Service No</span><strong>${b.serviceNo || "—"}</strong></div>
-             <div class="compare-line"><span>Location</span><strong>${b.location || "—"}</strong></div>`
-          : `<div class="compare-line"><span>Company</span><strong>${b._company || "—"}</strong></div>
-             <div class="compare-line"><span>Qty</span><strong>${num(b._qty)}</strong></div>`}
-      </div>
-    </div>
-    <div class="compare-winner">${winner}</div>
-  `;
 }
 
 /* ----------------------------
@@ -988,6 +1073,12 @@ export async function initAnalytics() {
     $("#anMaxAmount").value = "";
     $("#anMinDistance").value = "";
     $("#anMaxDistance").value = "";
+
+    $("#gcSource").value = "all";
+    $("#gcType").value = "line";
+    $("#gcXAxis").value = "month";
+    $("#gcYAxis").value = "amount";
+
     readFilters();
   }
 
@@ -995,14 +1086,13 @@ export async function initAnalytics() {
     state.filtered = applyFilters(state.base, state.filters);
 
     renderOverall(state.filtered);
+    renderOverallCharts(state.filtered);
+    renderCustomGraph(state.filtered);
     renderFuelSection(state.filtered);
     renderRideSection(state.filtered);
     renderExpenseSection(state.filtered);
-    renderCharts(state.filtered);
+    renderModuleCharts(state.filtered);
     renderExplorer(state.filtered, state.filters.sortBy, state.filters.module);
-
-    fillCompareSelects(state.filtered, $("#anCompareType")?.value || "fuel");
-    $("#compareResult").innerHTML = `<div class="small">Comparison result will appear here.</div>`;
   }
 
   $("#applyAnalyticsFilters")?.addEventListener("click", () => {
@@ -1015,22 +1105,19 @@ export async function initAnalytics() {
     renderAll();
   });
 
-  $("#anCompareType")?.addEventListener("change", () => {
-    fillCompareSelects(state.filtered, $("#anCompareType").value);
-    $("#compareResult").innerHTML = `<div class="small">Comparison result will appear here.</div>`;
+  $("#buildCustomChart")?.addEventListener("click", () => {
+    readFilters();
+    state.filtered = applyFilters(state.base, state.filters);
+    renderCustomGraph(state.filtered);
+    renderExplorer(state.filtered, state.filters.sortBy, state.filters.module);
   });
 
-  $("#runCompare")?.addEventListener("click", () => {
-    const type = $("#anCompareType")?.value || "fuel";
-    const a = getCompareRecord(state.filtered, type, $("#anCompareA")?.value);
-    const b = getCompareRecord(state.filtered, type, $("#anCompareB")?.value);
-    $("#compareResult").innerHTML = compareHtml(type, a, b);
-  });
-
-  $("#clearCompare")?.addEventListener("click", () => {
-    if ($("#anCompareA")) $("#anCompareA").value = "";
-    if ($("#anCompareB")) $("#anCompareB").value = "";
-    $("#compareResult").innerHTML = `<div class="small">Comparison result will appear here.</div>`;
+  $("#resetCustomChart")?.addEventListener("click", () => {
+    $("#gcSource").value = "all";
+    $("#gcType").value = "line";
+    $("#gcXAxis").value = "month";
+    $("#gcYAxis").value = "amount";
+    renderCustomGraph(state.filtered || state.base);
   });
 
   readFilters();
