@@ -1,6 +1,8 @@
-// js/fuel.js (DB version - SQLite via Express API)
+// js/fuel.js
 import { openModal } from "./main.js";
 import { buildBarLine, buildLine, destroyChart } from "./charts.js";
+
+const API_BASE = "https://fueltracker-manager-api.onrender.com";
 
 function num(v) {
   const n = Number(v);
@@ -17,12 +19,12 @@ function uid() {
 }
 
 async function apiGet(path) {
-  const res = await fetch(path);
+  const res = await fetch(API_BASE + path);
   if (!res.ok) throw new Error(`GET ${path} failed`);
   return await res.json();
 }
 async function apiSend(path, method, body) {
-  const res = await fetch(path, {
+  const res = await fetch(API_BASE + path, {
     method,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body)
@@ -49,45 +51,42 @@ function getLifetimeText(records) {
 }
 
 /**
- * Locked mileage rule (CORRECTED):
+ * Locked mileage rule:
  * - compute by sorting by odometer
  * - display sorted by date
  * - Distance/Mileage belong to the PREVIOUS stop (A), measured at the NEXT stop (B)
- * - if cannot compute mileage -> blank (no error)
+ * - if cannot compute mileage -> blank
  */
 function computeDerived(records) {
   const list = records.map(r => ({ ...r }));
 
-  // Work on clones, ordered by odometer to compute A->B windows
   const byOdo = [...list].sort((a, b) => num(a.odometer) - num(b.odometer));
 
-  // Initialize all derived values as blank
   for (const r of byOdo) {
     r._distance = null;
     r._mileage = null;
   }
 
-  // When we see current record (B), we update PREVIOUS record (A)
   let prev = null;
   for (const cur of byOdo) {
     if (prev && num(cur.odometer) > num(prev.odometer)) {
       const dist = num(cur.odometer) - num(prev.odometer);
-
-      // Distance belongs to PREVIOUS record
       prev._distance = dist;
 
-      // Mileage belongs to PREVIOUS record, using PREVIOUS litres
       const litresPrev = num(prev.litres);
       if (litresPrev > 0) prev._mileage = dist / litresPrev;
     }
     prev = cur;
   }
 
-  // Map derived back to original list order
-  const m = new Map(byOdo.map(r => [r.id, r]));
+  const map = new Map(byOdo.map(r => [r.id, r]));
   return list.map(r => {
-    const d = m.get(r.id);
-    return { ...r, _distance: d?._distance ?? null, _mileage: d?._mileage ?? null };
+    const d = map.get(r.id);
+    return {
+      ...r,
+      _distance: d?._distance ?? null,
+      _mileage: d?._mileage ?? null
+    };
   });
 }
 
@@ -122,7 +121,6 @@ function renderKPIs(records) {
   const kpiWorst = document.getElementById("kpiWorst");
   const kpiCpk = document.getElementById("kpiCpk");
 
-  // First 3 cards: show range in small size under main value
   if (kpiLitres) {
     const v = litres ? `${litres.toFixed(2)} L` : "—";
     kpiLitres.innerHTML = `${v}<div class="small">${rangeText}</div>`;
@@ -136,7 +134,6 @@ function renderKPIs(records) {
     kpiCount.innerHTML = `${v}<div class="small">${rangeText}</div>`;
   }
 
-  // 4th card unchanged
   if (kpiAvg) kpiAvg.textContent = avg ? `${avg.toFixed(2)} km/l` : "—";
   if (kpiBest) kpiBest.textContent = best ? `Best: ${best.toFixed(2)} km/l` : "Best: —";
   if (kpiWorst) kpiWorst.textContent = worst ? `Worst: ${worst.toFixed(2)} km/l` : "Worst: —";
@@ -241,7 +238,7 @@ function editRecord(r, onSave) {
     document.getElementById("modalBackdrop")?.classList.remove("show");
   });
 
-  document.getElementById("editFuelForm")?.addEventListener("submit", (e) => {
+  document.getElementById("editFuelForm")?.addEventListener("submit", e => {
     e.preventDefault();
     const f = new FormData(e.target);
 
@@ -320,7 +317,7 @@ function renderCharts(records) {
 function toCSV(rows) {
   if (!rows.length) return "";
   const cols = Object.keys(rows[0]);
-  const esc = (s) => `"${String(s ?? "").replace(/"/g, '""')}"`;
+  const esc = s => `"${String(s ?? "").replace(/"/g, '""')}"`;
   const head = cols.map(esc).join(",");
   const body = rows.map(r => cols.map(c => esc(r[c])).join(",")).join("\n");
   return head + "\n" + body;
@@ -370,10 +367,8 @@ function exportFuel(records) {
 }
 
 export async function initFuel() {
-  // Load from DB
   let records = computeDerived(await apiGet("/api/fuel"));
 
-  // Auto-calc litres from amount/price
   const form = document.getElementById("fuelForm");
   const priceEl = form?.querySelector('[name="pricePerLitre"]');
   const amountEl = form?.querySelector('[name="amountPaid"]');
@@ -384,16 +379,15 @@ export async function initFuel() {
     const amount = num(amountEl?.value);
     if (price > 0 && amount > 0) litresEl.value = (amount / price).toFixed(2);
   }
+
   priceEl?.addEventListener("input", autoCalcLitres);
   amountEl?.addEventListener("input", autoCalcLitres);
 
-  // Render initial
   renderKPIs(records);
   renderTable(records);
   renderCharts(records);
 
-  // Add record
-  form?.addEventListener("submit", async (e) => {
+  form?.addEventListener("submit", async e => {
     e.preventDefault();
     const f = new FormData(form);
 
@@ -419,7 +413,6 @@ export async function initFuel() {
 
     await apiSend("/api/fuel", "POST", rec);
 
-    // reload from DB
     records = computeDerived(await apiGet("/api/fuel"));
     renderKPIs(records);
     renderTable(records);
@@ -427,21 +420,20 @@ export async function initFuel() {
     form.reset();
   });
 
-  // Table actions
-  document.getElementById("fuelTbody")?.addEventListener("click", async (e) => {
+  document.getElementById("fuelTbody")?.addEventListener("click", async e => {
     const btn = e.target.closest("button");
     if (!btn) return;
 
     const act = btn.dataset.act;
     const id = btn.dataset.id;
-
     const rec = records.find(x => x.id === id);
+
     if (!rec) return;
 
     if (act === "view") viewRecord(rec);
 
     if (act === "edit") {
-      editRecord(rec, async (updated) => {
+      editRecord(rec, async updated => {
         await apiSend(`/api/fuel/${id}`, "PUT", updated);
         records = computeDerived(await apiGet("/api/fuel"));
         renderKPIs(records);
@@ -460,7 +452,6 @@ export async function initFuel() {
     }
   });
 
-  // Export
   document.getElementById("exportFuel")?.addEventListener("click", () => {
     exportFuel(records);
   });
