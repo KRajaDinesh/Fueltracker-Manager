@@ -1,8 +1,10 @@
-// FuelRideManager/js/rides.js (DB version - SQLite via Express API)
+// FuelRideManager/js/rides.js
 // Fuel-like behavior: View/Edit/Delete + Export
 // + Fuel ↔ Ride mapping (partial overlap) + Avg ₹/L + Estimated mileage in View
 
 import { openModal } from "./main.js";
+
+const API_BASE = "https://fueltracker-manager-api.onrender.com";
 
 function num(v) {
   const n = Number(v);
@@ -22,12 +24,12 @@ function safeParseJSON(v, fallback) {
 function fmtDate(d) { return d || ""; }
 
 async function apiGet(path) {
-  const res = await fetch(path, { cache: "no-store" });
+  const res = await fetch(API_BASE + path, { cache: "no-store" });
   if (!res.ok) throw new Error(`GET ${path} failed`);
   return await res.json();
 }
 async function apiSend(path, method, body) {
-  const res = await fetch(path, {
+  const res = await fetch(API_BASE + path, {
     method,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body ?? {})
